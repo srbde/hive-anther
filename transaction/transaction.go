@@ -42,7 +42,7 @@ type Transaction struct {
 
 // Operation is an interface for all Hive operations.
 type Operation interface {
-	ToDict() (string, map[string]interface{})
+	ToDict() (string, map[string]any)
 }
 
 // NewTransaction creates a new Transaction.
@@ -78,10 +78,10 @@ func (tx *Transaction) Sign(wif string) error {
 	txDict := tx.toDict()
 	txForHex := txDict
 	if _, ok := txForHex["signatures"]; !ok {
-		txForHex["signatures"] = []interface{}{}
+		txForHex["signatures"] = []any{}
 	}
 
-	txHexResult, err := tx.API.Call("condenser_api", "get_transaction_hex", []interface{}{txForHex})
+	txHexResult, err := tx.API.Call("condenser_api", "get_transaction_hex", []any{txForHex})
 	if err != nil {
 		return fmt.Errorf("error calling get_transaction_hex: %v", err)
 	}
@@ -95,7 +95,7 @@ func (tx *Transaction) Sign(wif string) error {
 	switch v := txHexResult.(type) {
 	case string:
 		txHex = v
-	case map[string]interface{}:
+	case map[string]any:
 		if hex, ok := v["hex"].(string); ok {
 			txHex = hex
 		} else if hex, ok := v["transaction_hex"].(string); ok {
@@ -194,29 +194,29 @@ func (tx *Transaction) Sign(wif string) error {
 }
 
 // Broadcast the transaction to the network.
-func (tx *Transaction) Broadcast() (interface{}, error) {
+func (tx *Transaction) Broadcast() (any, error) {
 	if len(tx.Signatures) == 0 {
 		return nil, errors.New("transaction is not signed")
 	}
 
 	txDict := tx.toDict()
-	return tx.API.Call("condenser_api", "broadcast_transaction_synchronous", []interface{}{txDict})
+	return tx.API.Call("condenser_api", "broadcast_transaction_synchronous", []any{txDict})
 }
 
 // toDict converts the transaction to a dictionary.
-func (tx *Transaction) toDict() map[string]interface{} {
-	ops := []interface{}{}
+func (tx *Transaction) toDict() map[string]any {
+	ops := []any{}
 	for _, op := range tx.Operations {
 		name, params := op.ToDict()
-		ops = append(ops, []interface{}{name, params})
+		ops = append(ops, []any{name, params})
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"ref_block_num":    tx.RefBlockNum,
 		"ref_block_prefix": tx.RefBlockPrefix,
 		"expiration":       tx.Expiration.Format("2006-01-02T15:04:05"),
 		"operations":       ops,
-		"extensions":       []interface{}{},
+		"extensions":       []any{},
 		"signatures":       tx.Signatures,
 	}
 }
@@ -236,12 +236,12 @@ func (tx *Transaction) setBlockParams() error {
 	tx.RefBlockNum = uint16(int(headBlockNumber-3) & 0xffff)
 
 	blockNum := int(headBlockNumber) - 2
-	blockResp, err := tx.API.Call("block_api", "get_block", map[string]interface{}{"block_num": blockNum})
+	blockResp, err := tx.API.Call("block_api", "get_block", map[string]any{"block_num": blockNum})
 	if err != nil {
 		return err
 	}
 
-	block, ok := blockResp.(map[string]interface{})["block"].(map[string]interface{})
+	block, ok := blockResp.(map[string]any)["block"].(map[string]any)
 	if !ok {
 		return errors.New("invalid block response")
 	}
@@ -281,8 +281,8 @@ type Vote struct {
 }
 
 // ToDict returns the operation as a dictionary.
-func (v *Vote) ToDict() (string, map[string]interface{}) {
-	return "vote", map[string]interface{}{
+func (v *Vote) ToDict() (string, map[string]any) {
+	return "vote", map[string]any{
 		"voter":    v.Voter,
 		"author":   v.Author,
 		"permlink": v.Permlink,
@@ -299,8 +299,8 @@ type Transfer struct {
 }
 
 // ToDict returns the operation as a dictionary.
-func (t *Transfer) ToDict() (string, map[string]interface{}) {
-	return "transfer", map[string]interface{}{
+func (t *Transfer) ToDict() (string, map[string]any) {
+	return "transfer", map[string]any{
 		"to":     t.To,
 		"from":   t.From,
 		"amount": t.Amount,
@@ -370,8 +370,8 @@ type Comment struct {
 }
 
 // ToDict returns the operation as a dictionary.
-func (c *Comment) ToDict() (string, map[string]interface{}) {
-	return "comment", map[string]interface{}{
+func (c *Comment) ToDict() (string, map[string]any) {
+	return "comment", map[string]any{
 		"parent_author":   c.ParentAuthor,
 		"parent_permlink": c.ParentPermlink,
 		"author":          c.Author,
@@ -391,8 +391,8 @@ type CustomJSON struct {
 }
 
 // ToDict returns the operation as a dictionary.
-func (cj *CustomJSON) ToDict() (string, map[string]interface{}) {
-	return "custom_json", map[string]interface{}{
+func (cj *CustomJSON) ToDict() (string, map[string]any) {
+	return "custom_json", map[string]any{
 		"id":                     cj.ID,
 		"json":                   cj.JSON,
 		"required_auths":         cj.RequiredAuths,
@@ -408,16 +408,16 @@ type Follow struct {
 }
 
 // ToDict returns the operation as a dictionary.
-func (f *Follow) ToDict() (string, map[string]interface{}) {
-	followJSON := map[string]interface{}{
+func (f *Follow) ToDict() (string, map[string]any) {
+	followJSON := map[string]any{
 		"follower":  f.Follower,
 		"following": f.Following,
 		"what":      f.What,
 	}
-	jsonBytes, _ := json.Marshal([]interface{}{"follow", followJSON})
+	jsonBytes, _ := json.Marshal([]any{"follow", followJSON})
 	jsonStr := string(jsonBytes)
 
-	return "custom_json", map[string]interface{}{
+	return "custom_json", map[string]any{
 		"id":                     "follow",
 		"json":                   jsonStr,
 		"required_auths":         []string{},

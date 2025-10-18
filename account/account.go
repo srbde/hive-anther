@@ -15,11 +15,10 @@ const (
 
 // Account represents a Hive account.
 type Account struct {
-	Name    string
-	API     *client.Client
-	Data    map[string]interface{}
-	rcInfo  map[string]interface{}
-	repInfo *int64
+	Name   string
+	API    *client.Client
+	Data   map[string]any
+	rcInfo map[string]any
 }
 
 // NewAccount creates a new Account.
@@ -27,7 +26,7 @@ func NewAccount(name string, api *client.Client) *Account {
 	return &Account{
 		Name: name,
 		API:  api,
-		Data: make(map[string]interface{}),
+		Data: make(map[string]any),
 	}
 }
 
@@ -42,12 +41,12 @@ func (a *Account) Refresh() error {
 		return err
 	}
 
-	accounts, ok := resp.([]interface{})
+	accounts, ok := resp.([]any)
 	if !ok || len(accounts) == 0 {
 		return fmt.Errorf("account '%s' not found", a.Name)
 	}
 
-	a.Data, _ = accounts[0].(map[string]interface{})
+	a.Data, _ = accounts[0].(map[string]any)
 	return nil
 }
 
@@ -116,9 +115,9 @@ func (a *Account) GetVotingPower(refresh bool) (float64, error) {
 	}
 
 	// Get manabar data
-	manabar, ok := a.Data["voting_manabar"].(map[string]interface{})
+	manabar, ok := a.Data["voting_manabar"].(map[string]any)
 	if !ok {
-		manabar = make(map[string]interface{})
+		manabar = make(map[string]any)
 	}
 
 	var currentMana float64
@@ -179,7 +178,7 @@ func (a *Account) VP() (float64, error) {
 }
 
 // GetRCInfo fetches and caches Resource Credit information.
-func (a *Account) GetRCInfo(refresh bool) (map[string]interface{}, error) {
+func (a *Account) GetRCInfo(refresh bool) (map[string]any, error) {
 	if a.rcInfo != nil && !refresh {
 		return a.rcInfo, nil
 	}
@@ -188,19 +187,19 @@ func (a *Account) GetRCInfo(refresh bool) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("API not configured")
 	}
 
-	resp, err := a.API.Call("rc_api", "find_rc_accounts", map[string]interface{}{"accounts": []string{a.Name}})
+	resp, err := a.API.Call("rc_api", "find_rc_accounts", map[string]any{"accounts": []string{a.Name}})
 	if err != nil {
 		return nil, err
 	}
 
-	var rcAccounts []interface{}
-	if respMap, ok := resp.(map[string]interface{}); ok {
-		if accounts, ok := respMap["rc_accounts"].([]interface{}); ok {
+	var rcAccounts []any
+	if respMap, ok := resp.(map[string]any); ok {
+		if accounts, ok := respMap["rc_accounts"].([]any); ok {
 			rcAccounts = accounts
-		} else if accounts, ok := respMap["result"].([]interface{}); ok {
+		} else if accounts, ok := respMap["result"].([]any); ok {
 			rcAccounts = accounts
 		}
-	} else if accounts, ok := resp.([]interface{}); ok {
+	} else if accounts, ok := resp.([]any); ok {
 		rcAccounts = accounts
 	}
 
@@ -208,14 +207,14 @@ func (a *Account) GetRCInfo(refresh bool) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("no RC data found for account %s", a.Name)
 	}
 
-	rcAccount, ok := rcAccounts[0].(map[string]interface{})
+	rcAccount, ok := rcAccounts[0].(map[string]any)
 	if !ok {
 		return nil, fmt.Errorf("invalid RC account data")
 	}
 
-	manabar, _ := rcAccount["rc_manabar"].(map[string]interface{})
+	manabar, _ := rcAccount["rc_manabar"].(map[string]any)
 	if manabar == nil {
-		manabar = make(map[string]interface{})
+		manabar = make(map[string]any)
 	}
 
 	maxRC := int64(0)
@@ -250,7 +249,7 @@ func (a *Account) GetRCInfo(refresh bool) (map[string]interface{}, error) {
 		currentPercent = (float64(currentMana) / float64(maxRC)) * 100
 	}
 
-	info := map[string]interface{}{
+	info := map[string]any{
 		"last_mana":        lastMana,
 		"current_mana":     currentMana,
 		"max_mana":         maxRC,
@@ -264,7 +263,7 @@ func (a *Account) GetRCInfo(refresh bool) (map[string]interface{}, error) {
 }
 
 // RCInfo returns the RC info property.
-func (a *Account) RCInfo() (map[string]interface{}, error) {
+func (a *Account) RCInfo() (map[string]any, error) {
 	return a.GetRCInfo(false)
 }
 
