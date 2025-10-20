@@ -29,21 +29,24 @@ func main() {
 	acc := account.NewAccount("thecrazygm", api)
 	w := wallet.NewWallet()
 
-	fmt.Println("=== Nectarlite Go Library - Transfer Example ===\n")
+	fmt.Println("=== Nectarlite Go Library - Transfer Example ===")
+	fmt.Println()
 
 	// Add the active key to the wallet
 	fmt.Println("Adding active key to wallet...")
 	if err := w.AddKey("thecrazygm", "active", activeWIF); err != nil {
 		log.Fatalf("Error adding key to wallet: %v\n\nPlease provide a valid WIF private key via ACTIVE_WIF environment variable.\nExample: export ACTIVE_WIF=\"5Kxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"\n", err)
 	}
-	fmt.Println("✓ Key added successfully\n")
+	fmt.Println("✓ Key added successfully")
+	fmt.Println()
 
 	// Refresh account data
 	fmt.Println("Fetching account data...")
 	if err := acc.Refresh(); err != nil {
 		log.Fatalf("Error refreshing account: %v", err)
 	}
-	fmt.Println("✓ Account data fetched successfully\n")
+	fmt.Println("✓ Account data fetched successfully")
+	fmt.Println()
 
 	// Display account info
 	fmt.Println("--- Account Information ---")
@@ -53,7 +56,8 @@ func main() {
 	}
 
 	// Create a transfer transaction
-	fmt.Println("\n--- Creating Transfer ---")
+	fmt.Println()
+	fmt.Println("--- Creating Transfer ---")
 	tx := transaction.NewTransaction(api)
 
 	transfer := &transaction.Transfer{
@@ -76,8 +80,8 @@ func main() {
 	if err := w.Sign(tx, "thecrazygm", "active"); err != nil {
 		log.Fatalf("Error signing transaction: %v\n\nCommon issues:\n  • get_transaction_hex API may not be available\n  • Network might be congested\n  • Node might be in maintenance\n  Try with a different node or wait a moment and retry.\n", err)
 	}
-	fmt.Printf("✓ Transaction signed successfully\n")
-	fmt.Printf("✓ Signatures: %d\n\n", len(tx.Signatures))
+	fmt.Printf("Transaction signed successfully\n")
+	fmt.Printf("Signatures: %d\n\n", len(tx.Signatures))
 
 	// Broadcast the transaction
 	fmt.Println("--- Broadcasting Transaction ---")
@@ -87,7 +91,8 @@ func main() {
 		log.Fatalf("Error broadcasting transaction: %v", err)
 	}
 
-	fmt.Println("✓ Transaction broadcast successfully!\n")
+	fmt.Println("Transaction broadcast successfully!")
+	fmt.Println()
 	fmt.Printf("Result: %v\n", result)
 	fmt.Println("\n=== Transfer Complete ===")
 }
