@@ -379,6 +379,7 @@ import "github.com/thecrazygm/anther/crypto"
 - [func SignTransactionBytesWithChainID\(txBytes \[\]byte, wif string, chainID string\) \(string, error\)](<#SignTransactionBytesWithChainID>)
 - [func SignTransactionHex\(txHex string, wif string\) \(string, error\)](<#SignTransactionHex>)
 - [func SignTransactionHexWithChainID\(txHex string, wif string, chainID string\) \(string, error\)](<#SignTransactionHexWithChainID>)
+- [func WIFToPublicKey\(wif string\) \(string, error\)](<#WIFToPublicKey>)
 
 
 ## Constants
@@ -434,15 +435,14 @@ func SignTransactionHexWithChainID(txHex string, wif string, chainID string) (st
 
 SignTransactionHexWithChainID signs a transaction hex string with the provided chain ID.
 
-# examples
+<a name="WIFToPublicKey"></a>
+## func WIFToPublicKey
 
 ```go
-import "github.com/thecrazygm/anther/examples"
+func WIFToPublicKey(wif string) (string, error)
 ```
 
-## Index
-
-
+WIFToPublicKey derives the Hive\-formatted public key \("STM..."\) from a private WIF key.
 
 # exceptions
 
@@ -1712,6 +1712,7 @@ Wallet is a simple in\-memory wallet for managing Hive private keys.
 ```go
 type Wallet struct {
     Keys map[string]map[string]string
+    // contains filtered or unexported fields
 }
 ```
 
@@ -1774,6 +1775,16 @@ import "github.com/thecrazygm/anther/examples/comment-feed"
 
 ```go
 import "github.com/thecrazygm/anther/examples/memo-demo"
+```
+
+## Index
+
+
+
+# send
+
+```go
+import "github.com/thecrazygm/anther/examples/send"
 ```
 
 ## Index

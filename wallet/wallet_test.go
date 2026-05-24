@@ -51,7 +51,7 @@ func TestWalletAddKeyValidation(t *testing.T) {
 	testWIF := generateTestWIF(t)
 
 	t.Run("invalid role", func(t *testing.T) {
-		if err := w.AddKey("alice", "owner", testWIF); err == nil {
+		if err := w.AddKey("alice", "invalid-role", testWIF); err == nil {
 			t.Fatalf("expected error for invalid role")
 		}
 	})

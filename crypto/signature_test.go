@@ -3,6 +3,7 @@ package crypto
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"strings"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcec/v2"
@@ -141,5 +142,23 @@ func TestRecoverKeyFromSignature(t *testing.T) {
 
 	if recoveredKeyStr != expectedPubKeyStr {
 		t.Fatalf("expected key %s, got %s", expectedPubKeyStr, recoveredKeyStr)
+	}
+}
+
+func TestWIFToPublicKey(t *testing.T) {
+	wif := generateTestWIF(t)
+	pubKeyStr, err := WIFToPublicKey(wif)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// It should start with "STM"
+	if !strings.HasPrefix(pubKeyStr, "STM") {
+		t.Errorf("expected public key to start with STM, got %s", pubKeyStr)
+	}
+
+	// Verify decoding an invalid WIF fails
+	if _, err := WIFToPublicKey("invalid-wif"); err == nil {
+		t.Errorf("expected error when decoding invalid WIF")
 	}
 }

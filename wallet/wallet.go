@@ -3,6 +3,7 @@ package wallet
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/thecrazygm/anther/exceptions"
@@ -11,7 +12,8 @@ import (
 
 // Wallet is a simple in-memory wallet for managing Hive private keys.
 type Wallet struct {
-	Keys map[string]map[string]string
+	mutex sync.RWMutex
+	Keys  map[string]map[string]string
 }
 
 // NewWallet creates a new Wallet.
@@ -23,8 +25,8 @@ func NewWallet() *Wallet {
 
 // AddKey adds a private key for an account role.
 func (w *Wallet) AddKey(account, role, wif string) error {
-	if role != "posting" && role != "active" && role != "memo" {
-		return fmt.Errorf("role must be 'posting', 'active', or 'memo'")
+	if role != "posting" && role != "active" && role != "memo" && role != "owner" {
+		return fmt.Errorf("role must be 'posting', 'active', 'memo', or 'owner'")
 	}
 	if account == "" {
 		return fmt.Errorf("account must be a non-empty string")
@@ -38,6 +40,9 @@ func (w *Wallet) AddKey(account, role, wif string) error {
 		return exceptions.NewInvalidKeyFormatError(fmt.Sprintf("invalid WIF format: %v", err))
 	}
 
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
 	if _, ok := w.Keys[account]; !ok {
 		w.Keys[account] = make(map[string]string)
 	}
@@ -47,6 +52,9 @@ func (w *Wallet) AddKey(account, role, wif string) error {
 
 // HasKey checks if a key is loaded for the account/role.
 func (w *Wallet) HasKey(account, role string) bool {
+	w.mutex.RLock()
+	defer w.mutex.RUnlock()
+
 	if _, ok := w.Keys[account]; !ok {
 		return false
 	}
@@ -56,10 +64,17 @@ func (w *Wallet) HasKey(account, role string) bool {
 
 // GetKey gets WIF key if available.
 func (w *Wallet) GetKey(account, role string) (string, error) {
-	if !w.HasKey(account, role) {
+	w.mutex.RLock()
+	defer w.mutex.RUnlock()
+
+	if _, ok := w.Keys[account]; !ok {
 		return "", exceptions.NewMissingKeyError(account, role)
 	}
-	return w.Keys[account][role], nil
+	wif, ok := w.Keys[account][role]
+	if !ok {
+		return "", exceptions.NewMissingKeyError(account, role)
+	}
+	return wif, nil
 }
 
 // Sign the transaction using the specified account's role key.

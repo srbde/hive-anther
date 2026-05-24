@@ -179,3 +179,16 @@ func RecoverKeyFromSignature(signatureHex string, digest []byte) (string, error)
 	payload := append(pubBytes, checksum[:4]...)
 	return "STM" + base58.Encode(payload), nil
 }
+
+// WIFToPublicKey derives the Hive-formatted public key ("STM...") from a private WIF key.
+func WIFToPublicKey(wif string) (string, error) {
+	wifDecoded, err := btcutil.DecodeWIF(wif)
+	if err != nil {
+		return "", fmt.Errorf("invalid WIF key: %w", err)
+	}
+
+	pubBytes := wifDecoded.PrivKey.PubKey().SerializeCompressed()
+	checksum := btcutil.Hash160(pubBytes)
+	payload := append(pubBytes, checksum[:4]...)
+	return "STM" + base58.Encode(payload), nil
+}

@@ -273,7 +273,7 @@ func (tx *Transaction) setBlockParams() error {
 	if err != nil {
 		return err
 	}
-	tx.Expiration = expiration.Add(30 * time.Second)
+	tx.Expiration = expiration.Add(60 * time.Second)
 
 	return nil
 }
