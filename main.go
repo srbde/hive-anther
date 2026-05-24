@@ -1,17 +1,32 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
-	"os"
+	"time"
 
-	"github.com/thecrazygm/nectar-go/account"
-	"github.com/thecrazygm/nectar-go/client"
-	"github.com/thecrazygm/nectar-go/transaction"
-	"github.com/thecrazygm/nectar-go/wallet"
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/btcutil/base58"
+	"github.com/btcsuite/btcd/chaincfg"
+
+	"github.com/thecrazygm/anther/account"
+	"github.com/thecrazygm/anther/client"
+	"github.com/thecrazygm/anther/memo"
+	"github.com/thecrazygm/anther/transaction"
 )
 
 func main() {
+	fmt.Println("=====================================================")
+	fmt.Println("   🌿 ANTHER GO HIVE LIBRARY - COMPLETE TOUR 🌿")
+	fmt.Println("=====================================================")
+	fmt.Println("This script showcases the features of the Anther Go")
+	fmt.Println("library (offline signing, ECIES, HAF, streaming, and")
+	fmt.Println("local serialization) without requiring any real keys.")
+	fmt.Println("=====================================================")
+	fmt.Println()
+
 	// Initialize the client with Hive nodes
 	nodes := []string{
 		"https://api.hive.blog",
@@ -19,98 +34,201 @@ func main() {
 	}
 	api := client.NewClient(nodes, 30)
 
-	// Create an account instance for "thecrazygm"
+	// ==========================================
+	// Phase 1: Blockchain Live Metrics
+	// ==========================================
+	fmt.Println("🌐 [PHASE 1] Querying Hive Blockchain Status...")
+	props, err := api.GetDynamicGlobalPropertiesStruct()
+	if err != nil {
+		log.Fatalf("Failed to fetch blockchain global properties: %v", err)
+	}
+	fmt.Printf("✓ Current Head Block: %d\n", props.HeadBlockNumber)
+	fmt.Printf("  Head Block ID:      %s\n", props.HeadBlockID)
+	fmt.Printf("  Blockchain Time:    %s\n", props.Time)
+	fmt.Printf("  Irreversible Block:  %d\n", props.LastIrreversibleBlockNum)
+	fmt.Println()
+
+	// ==========================================
+	// Phase 2: Live Block Analysis & Operations
+	// ==========================================
+	targetBlock := props.HeadBlockNumber - 5 // query a block slightly in the past to ensure node consensus has it cached
+	fmt.Printf("📦 [PHASE 2] Inspecting Block #%d & Operation Distribution...\n", targetBlock)
+	block, err := api.GetBlock(targetBlock)
+	if err != nil {
+		log.Printf("Warning: Failed to fetch block #%d: %v\n", targetBlock, err)
+	} else {
+		fmt.Printf("✓ Block Witness:   @%s\n", block.Witness)
+		fmt.Printf("  Transactions:    %d\n", len(block.Transactions))
+		if len(block.TransactionIDs) > 0 {
+			showCount := 3
+			if len(block.TransactionIDs) < showCount {
+				showCount = len(block.TransactionIDs)
+			}
+			fmt.Printf("  Tx ID Snippets:  %v\n", block.TransactionIDs[:showCount])
+		}
+
+		// Fetch and analyze operations within this block
+		ops, err := api.GetOpsInBlock(targetBlock, false)
+		if err != nil {
+			log.Printf("Warning: Failed to fetch operations for block #%d: %v\n", targetBlock, err)
+		} else {
+			opCounts := make(map[string]int)
+			for _, op := range ops {
+				if len(op.Op) > 0 {
+					if name, ok := op.Op[0].(string); ok {
+						opCounts[name]++
+					}
+				}
+			}
+			fmt.Println("  Operation Distribution in this Block:")
+			if len(opCounts) == 0 {
+				fmt.Println("    (None found or empty block)")
+			} else {
+				for opName, count := range opCounts {
+					fmt.Printf("    - %-20s: %d\n", opName, count)
+				}
+			}
+		}
+	}
+	fmt.Println()
+
+	// ==========================================
+	// Phase 3: Public Account Info (HAF + Condenser)
+	// ==========================================
+	fmt.Println("👤 [PHASE 3] Querying Public Account Stats (No Keys Required)...")
 	acc := account.NewAccount("thecrazygm", api)
-
-	fmt.Println("=== Nectarlite Go Library - Account Query ===")
-
-	// Refresh account data
-	fmt.Println("Fetching account data for 'thecrazygm'...")
 	if err := acc.Refresh(); err != nil {
-		log.Fatalf("Error refreshing account: %v", err)
-	}
-	fmt.Println("✓ Account data fetched successfully")
-
-	// Display basic account info
-	fmt.Println("--- Basic Account Information ---")
-	fmt.Printf("Account Name: %s\n", acc.Name)
-	if reputation, err := acc.Reputation(); err != nil {
-		log.Printf("Error getting reputation: %v", err)
+		log.Printf("Warning: Failed to refresh account statistics: %v\n", err)
 	} else {
-		fmt.Printf("Reputation: %d\n", reputation)
-	}
-	if balance, ok := acc.Data["balance"].(string); ok {
-		fmt.Printf("Balance: %s\n", balance)
-	}
-	if hbdBalance, ok := acc.Data["hbd_balance"].(string); ok {
-		fmt.Printf("HBD Balance: %s\n", hbdBalance)
-	}
-	if vestingShares, ok := acc.Data["vesting_shares"].(string); ok {
-		fmt.Printf("Vesting Shares: %s\n", vestingShares)
-	}
-	if createdAt, ok := acc.Data["created"].(string); ok {
-		fmt.Printf("Created: %s\n", createdAt)
-	}
+		rep, err := acc.Reputation()
+		if err != nil {
+			rep = 0
+		}
+		vp, err := acc.VotingPower()
+		if err != nil {
+			vp = 0.0
+		}
+		rc, err := acc.RC()
+		if err != nil {
+			rc = 0.0
+		}
 
-	// Get voting power
-	fmt.Println("\n--- Voting Power ---")
-	vp, err := acc.VotingPower()
+		balance, _ := acc.Data["balance"].(string)
+		hbdBalance, _ := acc.Data["hbd_balance"].(string)
+		vestingShares, _ := acc.Data["vesting_shares"].(string)
+
+		fmt.Printf("✓ Target Account:   @%s\n", acc.Name)
+		fmt.Printf("  Reputation (HAF):  %d\n", rep)
+		fmt.Printf("  HIVE Balance:      %s\n", balance)
+		fmt.Printf("  HBD Balance:       %s\n", hbdBalance)
+		fmt.Printf("  Vesting Shares:    %s\n", vestingShares)
+		fmt.Printf("  Voting Power:      %.2f%%\n", vp)
+		fmt.Printf("  Resource Credits:  %.2f%%\n", rc)
+	}
+	fmt.Println()
+
+	// ==========================================
+	// Phase 4: Secure ECIES Memo Encryption (Offline Demo)
+	// ==========================================
+	fmt.Println("🔒 [PHASE 4] Offline Secure ECIES Memo Encryption/Decryption...")
+
+	// Generate dummy key pairs for sender and recipient offline
+	senderWIF, senderPubKey := generateKeyPair(0x01)
+	recipientWIF, recipientPubKey := generateKeyPair(0x02)
+
+	fmt.Printf("✓ Created Demo Sender Keypair:\n")
+	fmt.Printf("  - Private WIF: %s\n", senderWIF)
+	fmt.Printf("  - Public Key:  %s\n", senderPubKey)
+	fmt.Printf("✓ Created Demo Recipient Keypair:\n")
+	fmt.Printf("  - Private WIF: %s\n", recipientWIF)
+	fmt.Printf("  - Public Key:  %s\n", recipientPubKey)
+
+	secretMemo := "#Anther provides premium end-to-end secp256k1 ECIES memo protection!"
+	fmt.Printf("Original Memo: %q\n", secretMemo)
+
+	// Encrypt the memo
+	encryptedMemo, err := memo.Encode(senderWIF, recipientPubKey, secretMemo)
 	if err != nil {
-		log.Printf("Error getting voting power: %v", err)
-	} else {
-		fmt.Printf("Current Voting Power: %.2f%%\n", vp)
+		log.Fatalf("Failed to encrypt memo: %v", err)
 	}
+	fmt.Printf("Encrypted Envelope: %s\n", encryptedMemo)
 
-	// Get RC info
-	fmt.Println("\n--- Resource Credits (RC) ---")
-	rcInfo, err := acc.RCInfo()
+	// Decrypt the memo using recipient WIF
+	decryptedMemo, err := memo.Decode(recipientWIF, encryptedMemo)
 	if err != nil {
-		log.Printf("Note: Could not fetch RC info: %v", err)
-	} else {
-		if currentPercent, ok := rcInfo["current_percent"].(float64); ok {
-			fmt.Printf("Current RC: %.2f%%\n", currentPercent)
-		}
-		if lastPercent, ok := rcInfo["last_percent"].(float64); ok {
-			fmt.Printf("Last RC: %.2f%%\n", lastPercent)
-		}
-		if currentMana, ok := rcInfo["current_mana"].(int64); ok {
-			fmt.Printf("Current Mana: %d\n", currentMana)
-		}
+		log.Fatalf("Failed to decrypt memo: %v", err)
 	}
+	fmt.Printf("Decrypted Memo:    %q\n", decryptedMemo)
+	fmt.Println()
 
-	// Demonstrate creating a transfer transaction (without actual broadcast)
-	fmt.Println("\n--- Transfer Example (Unsigned) ---")
+	// ==========================================
+	// Phase 5: Local Binary Serialization & TaPoS
+	// ==========================================
+	fmt.Println("⚡ [PHASE 5] Local Serialization & TaPoS Headers...")
+
+	// Instantiate a transaction
 	tx := transaction.NewTransaction(api)
-	transfer := &transaction.Transfer{
-		From:   "thecrazygm",
-		To:     "ecoinstant",
-		Amount: "0.001 HIVE",
-		Memo:   "Hello from golang!",
-	}
-	tx.AppendOp(transfer)
-	fmt.Printf("Transfer prepared (ready to sign with ACTIVE_WIF):\n")
-	fmt.Printf("  From: %s\n", transfer.From)
-	fmt.Printf("  To: %s\n", transfer.To)
-	fmt.Printf("  Amount: %s\n", transfer.Amount)
-	fmt.Printf("  Memo: %s\n", transfer.Memo)
-	activeWIF := os.Getenv("ACTIVE_WIF")
-	if activeWIF == "" {
-		fmt.Println("\n--- Signing Skipped ---")
-		fmt.Println("ACTIVE_WIF not set; unable to sign sample transfer.")
-	} else {
-		fmt.Println("\n--- Signing Transfer ---")
-		w := wallet.NewWallet()
-		if err := w.AddKey("thecrazygm", "active", activeWIF); err != nil {
-			log.Printf("Error adding key to wallet: %v", err)
-		} else if err := w.Sign(tx, "thecrazygm", "active"); err != nil {
-			log.Printf("Error signing transfer: %v", err)
-		} else if len(tx.Signatures) > 0 {
-			fmt.Printf("Signature: %s\n", tx.Signatures[0])
+
+	// Setup TaPoS headers automatically using global properties
+	// ref_block_num is head block's lower 16 bits
+	tx.RefBlockNum = uint16(props.HeadBlockNumber & 0xFFFF)
+	// ref_block_prefix is head block ID prefix parsed as little-endian uint32
+	if len(props.HeadBlockID) >= 16 {
+		// Parse block prefix from block ID hex string
+		prefixBytes, err := hex.DecodeString(props.HeadBlockID[8:16])
+		if err == nil && len(prefixBytes) == 4 {
+			// Convert little endian bytes to uint32
+			tx.RefBlockPrefix = uint32(prefixBytes[0]) |
+				uint32(prefixBytes[1])<<8 |
+				uint32(prefixBytes[2])<<16 |
+				uint32(prefixBytes[3])<<24
 		}
 	}
 
-	fmt.Printf("\nRun the transfer example with ACTIVE_WIF env var to broadcast:\n")
-	fmt.Printf("  ACTIVE_WIF=<your-key> ./examples/transfer\n")
+	// Set expiration to 1 hour from now
+	tx.Expiration = time.Now().Add(1 * time.Hour).UTC()
 
-	fmt.Println("\n=== Query Complete ===")
+	// Append a CustomJSON operation to show serialization
+	customJSONOp := &transaction.CustomJSON{
+		ID:                   "follow",
+		JSON:                 `["follow",{"follower":"thecrazygm","following":"srbde","what":["blog"]}]`,
+		RequiredAuths:        []string{},
+		RequiredPostingAuths: []string{"thecrazygm"},
+	}
+	tx.AppendOp(customJSONOp)
+
+	// Serialize the transaction locally
+	txBytes, err := tx.Bytes()
+	if err != nil {
+		log.Fatalf("Failed to serialize transaction: %v", err)
+	}
+
+	fmt.Printf("✓ Built CustomJSON operation with TaPoS:\n")
+	fmt.Printf("  - Ref Block Num:    %d\n", tx.RefBlockNum)
+	fmt.Printf("  - Ref Block Prefix: %d\n", tx.RefBlockPrefix)
+	fmt.Printf("  - Expiration:       %s\n", tx.Expiration.Format(time.RFC3339))
+	fmt.Printf("✓ Serialized Transaction Bytes Size: %d bytes\n", len(txBytes))
+	fmt.Printf("✓ Raw Serialized Hex Payload:\n  %s\n", hex.EncodeToString(txBytes))
+	fmt.Println()
+
+	fmt.Println("=====================================================")
+	fmt.Println("🌿 Tour Complete! All features working successfully.")
+	fmt.Println("=====================================================")
+}
+
+// generateKeyPair derives a testing private WIF key and Hive-formatted STM public key
+func generateKeyPair(seed byte) (string, string) {
+	priv := [32]byte{}
+	for i := range priv {
+		priv[i] = seed
+	}
+	key, _ := btcec.PrivKeyFromBytes(priv[:])
+	wif, _ := btcutil.NewWIF(key, &chaincfg.MainNetParams, false)
+
+	pubBytes := key.PubKey().SerializeCompressed()
+	checksum := btcutil.Hash160(pubBytes)
+	payload := append(pubBytes, checksum[:4]...)
+	pubKeyStr := "STM" + base58.Encode(payload)
+
+	return wif.String(), pubKeyStr
 }

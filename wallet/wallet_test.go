@@ -9,8 +9,8 @@ import (
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/thecrazygm/nectar-go/client"
-	"github.com/thecrazygm/nectar-go/transaction"
+	"github.com/thecrazygm/anther/client"
+	"github.com/thecrazygm/anther/transaction"
 )
 
 func generateTestWIF(t *testing.T) string {

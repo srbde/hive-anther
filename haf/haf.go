@@ -16,8 +16,10 @@ var defaultAPIs = []string{
 	"https://api.syncad.com",
 }
 
-const defaultTimeout = 30 * time.Second
-const userAgent = "nectarlite-go/0.0.1"
+const (
+	defaultTimeout = 30 * time.Second
+	userAgent      = "nectarlite-go/0.0.1"
+)
 
 // Client is an HTTP client for interacting with Hive Account Framework (HAF) endpoints.
 type Client struct {

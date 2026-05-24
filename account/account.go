@@ -1,12 +1,13 @@
+// Package account manages Hive account profiles, reputations, voting power, Resource Credit details, and helper functions to build account operations.
 package account
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/thecrazygm/nectar-go/client"
-	"github.com/thecrazygm/nectar-go/haf"
-	"github.com/thecrazygm/nectar-go/transaction"
+	"github.com/thecrazygm/anther/client"
+	"github.com/thecrazygm/anther/haf"
+	"github.com/thecrazygm/anther/transaction"
 )
 
 const (

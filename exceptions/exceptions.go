@@ -2,36 +2,36 @@ package exceptions
 
 import "fmt"
 
-// NectarliteException is the base exception for all nectarlite errors.
-type NectarliteException struct {
+// AntherError is the base exception for all anther library errors.
+type AntherError struct {
 	Message string
 }
 
-func (e *NectarliteException) Error() string {
+func (e *AntherError) Error() string {
 	return e.Message
 }
 
 // TransactionError represents an error during transaction operations.
 type TransactionError struct {
-	*NectarliteException
+	*AntherError
 }
 
 // NewTransactionError creates a new TransactionError.
 func NewTransactionError(msg string) *TransactionError {
 	return &TransactionError{
-		NectarliteException: &NectarliteException{Message: msg},
+		AntherError: &AntherError{Message: msg},
 	}
 }
 
 // MissingKeyError represents an error when a key is missing.
 type MissingKeyError struct {
-	*NectarliteException
+	*AntherError
 }
 
 // NewMissingKeyError creates a new MissingKeyError.
 func NewMissingKeyError(account, role string) *MissingKeyError {
 	return &MissingKeyError{
-		NectarliteException: &NectarliteException{
+		AntherError: &AntherError{
 			Message: fmt.Sprintf("No %s key for account '%s'", role, account),
 		},
 	}
@@ -39,24 +39,50 @@ func NewMissingKeyError(account, role string) *MissingKeyError {
 
 // InvalidKeyFormatError represents an error when a key has an invalid format.
 type InvalidKeyFormatError struct {
-	*NectarliteException
+	*AntherError
 }
 
 // NewInvalidKeyFormatError creates a new InvalidKeyFormatError.
 func NewInvalidKeyFormatError(msg string) *InvalidKeyFormatError {
 	return &InvalidKeyFormatError{
-		NectarliteException: &NectarliteException{Message: msg},
+		AntherError: &AntherError{Message: msg},
 	}
 }
 
 // NodeError represents an error from a Hive node.
 type NodeError struct {
-	*NectarliteException
+	*AntherError
 }
 
 // NewNodeError creates a new NodeError.
 func NewNodeError(msg string) *NodeError {
 	return &NodeError{
-		NectarliteException: &NectarliteException{Message: msg},
+		AntherError: &AntherError{Message: msg},
+	}
+}
+
+// RPCError represents a JSON-RPC error returned by a Hive node.
+type RPCError struct {
+	*AntherError
+	Code int
+}
+
+// NewRPCError creates a new RPCError.
+func NewRPCError(code int, msg string) *RPCError {
+	return &RPCError{
+		AntherError: &AntherError{Message: msg},
+		Code:        code,
+	}
+}
+
+// SerializationError represents a local serialization or deserialization error.
+type SerializationError struct {
+	*AntherError
+}
+
+// NewSerializationError creates a new SerializationError.
+func NewSerializationError(msg string) *SerializationError {
+	return &SerializationError{
+		AntherError: &AntherError{Message: msg},
 	}
 }

@@ -1,376 +1,215 @@
-# Nectarlite Go - HIVE Blockchain Library
+# 🌿 Anther
 
-A complete Go implementation of the HIVE blockchain library, compatible with the Python nectarlite reference implementation.
+**The modern, secure, and production-ready Go SDK for the Hive blockchain. Built for 2026 and beyond.**
 
-## Status: ✅ PRODUCTION READY
+Go is built for high-performance concurrency, network resilience, and robust system-level tooling. **Anther** brings those strengths to the Hive blockchain. It is designed from the ground up to provide secure, offline transaction serialization and signing, multi-signature authority validation, and native goroutine/channel-based blockchain streaming.
 
-All features implemented and tested. Ready for production use on the HIVE blockchain.
-
-## Features
-
-### Core Functionality
-
-- ✅ Account management and queries
-- ✅ Transaction creation and signing
-- ✅ Multi-operation transactions
-- ✅ Broadcasting to network
-- ✅ Wallet management with WIF keys
-- ✅ Multi-node client with failover
-
-### Signing System
-
-- ✅ ECDSA signature generation
-- ✅ Canonical signature format (s ≤ N/2)
-- ✅ Recovery ID bit adjustment
-- ✅ Wire format conversion (HIVE/HBD ↔ STEEM/SBD)
-- ✅ Proper transaction hashing with chain ID
-
-### Supported Operations
-
-- ✅ Transfer (with amount and memo)
-- ✅ Vote (with weight)
-- ✅ Comment (with metadata)
-- ✅ CustomJSON (for plugins)
-- ✅ Follow (via custom JSON)
-
-### Account Features
-
-- ✅ Account data fetching
-- ✅ Voting power calculation
-- ✅ Mana regeneration tracking
-- ✅ Resource credit (RC) queries
-- ✅ History and balance information
-
-## Quick Start
-
-### Installation
-
-```bash
-go get github.com/thecrazygm/nectar-go
-```
-
-### Basic Usage
-
-```go
-package main
-
-import (
-    "fmt"
-    "github.com/thecrazygm/nectar-go/account"
-    "github.com/thecrazygm/nectar-go/client"
-)
-
-func main() {
-    // Create client
-    api := client.NewClient(
-        []string{"https://api.hive.blog"},
-        30, // timeout in seconds
-    )
-
-    // Query account
-    acc := account.NewAccount("username", api)
-    if err := acc.Refresh(); err != nil {
-        panic(err)
-    }
-
-    fmt.Printf("Account: %s\n", acc.Name)
-    fmt.Printf("Balance: %v\n", acc.Data["balance"])
-}
-```
-
-### Transaction Example
-
-```go
-package main
-
-import (
-    "fmt"
-    "log"
-    "os"
-    "github.com/thecrazygm/nectar-go/client"
-    "github.com/thecrazygm/nectar-go/transaction"
-    "github.com/thecrazygm/nectar-go/wallet"
-)
-
-func main() {
-    // Setup
-    api := client.NewClient([]string{"https://api.hive.blog"}, 30)
-    w := wallet.NewWallet()
-
-    // Create transfer
-    tx := transaction.NewTransaction(api)
-    tx.AppendOp(&transaction.Transfer{
-        From:   "sender",
-        To:     "receiver",
-        Amount: "1.000 HIVE",
-        Memo:   "Payment",
-    })
-
-    // Sign
-    wif := os.Getenv("ACTIVE_WIF")
-    w.AddKey("sender", "active", wif)
-    if err := w.Sign(tx, "sender", "active"); err != nil {
-        log.Fatal(err)
-    }
-
-    // Broadcast
-    result, err := tx.Broadcast()
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    fmt.Printf("Transaction: %v\n", result)
-}
-```
-
-## Architecture
-
-### Transaction Signing Flow
-
-```text
-WIF Key + Transaction Data
-    ↓
-Create transaction with operations
-    ↓
-Get transaction hex from node
-    ↓
-SHA256(CHAIN_ID + TX_HEX) = digest
-    ↓
-ECDSA sign digest
-    ↓
-Extract (r, s, recovery_id)
-    ↓
-Canonicalize: if s > N/2 then s = N - s
-    ↓
-Adjust recovery_id: if s was flipped then recovery_id XOR 1
-    ↓
-Build signature: [27+4+recovery_id][r][s]
-    ↓
-Broadcast to network ✅
-```
-
-### Wire Format Conversion
-
-HIVE transactions automatically convert between user-friendly and wire format names:
-
-```go
-// User perspective (input)
-Amount: "1.000 HIVE"     // User-friendly
-
-// Wire format (for signing)
-"STEEM"                   // Legacy name
-
-// Output
-Amount: "1.000 HIVE"     // User-friendly again
-```
-
-This conversion is transparent and automatic during transaction signing.
-
-## Key Insight: Recovery ID Adjustment with Decred secp256k1
-
-The implementation uses **Decred's secp256k1 library** which provides `SignCompact()` that:
-
-1. Automatically embeds the recovery ID in the first byte
-2. Returns compact signatures ready for HIVE blockchain
-3. Works seamlessly with canonicalization
-
-When canonicalizing an ECDSA signature by transforming `s → N - s`, the y-parity of the elliptic curve point changes. Therefore, we must flip recovery ID bit 0:
-
-```go
-if sWasFlipped {
-    recoveryID = recoveryID ^ 1  // Flip y-parity bit
-}
-```
-
-This ensures the signature can properly recover to the original public key on the blockchain.
-
-## File Structure
-
-```text
-nectar-go/
-├── README.md                    # This file
-├── IMPLEMENTATION_SUMMARY.md    # Complete feature list
-├── SIGNING_IMPLEMENTATION.md    # Signing process details
-├── RECOVERY_ID_DEEP_DIVE.md     # Recovery ID mathematics
-├── WIRE_FORMAT.md               # Wire format conversion
-├── CANONICAL_SIGNATURES.md      # Canonicalization details
-│
-├── account/
-│   └── account.go              # Account management
-├── client/
-│   └── client.go               # JSON-RPC client
-├── exceptions/
-│   └── exceptions.go           # Error types
-├── transaction/
-│   └── transaction.go          # Transaction signing
-├── types/
-│   └── types.go                # Amount and types
-├── wallet/
-│   └── wallet.go               # Wallet management
-│
-├── examples/
-│   └── transfer.go             # Transfer example
-├── main.go                      # CLI entry point
-└── go.mod                       # Go module definition
-```
-
-## API Reference
-
-### Client
-
-```go
-// Create client with nodes and timeout
-api := client.NewClient([]string{node1, node2}, timeoutSeconds)
-
-// Make RPC call
-result, err := api.Call("api_name", "method_name", params)
-
-// Account queries
-properties, err := api.GetDynamicGlobalProperties()
-account, err := api.GetAccount("username")
-```
-
-### Account
-
-```go
-// Create account
-acc := account.NewAccount("username", api)
-
-// Refresh data
-err := acc.Refresh()
-
-// Get voting power
-votingPower := acc.GetVotingPower()
-
-// Get RC info
-rcInfo, err := acc.GetRCInfo()
-```
-
-### Transaction
-
-```go
-// Create transaction
-tx := transaction.NewTransaction(api)
-
-// Add operations
-tx.AppendOp(&transaction.Transfer{...})
-tx.AppendOp(&transaction.Vote{...})
-
-// Sign
-err := tx.Sign(wifKey)
-
-// Broadcast
-result, err := tx.Broadcast()
-```
-
-### Wallet
-
-```go
-// Create wallet
-w := wallet.NewWallet()
-
-// Add key
-err := w.AddKey("username", "active", wifKey)
-
-// Sign transaction
-err := w.Sign(tx, "username", "active")
-```
-
-## Constants
-
-- **HIVE Chain ID**: `beeab0de00000000000000000000000000000000000000000000000000000000`
-- **secp256k1 N**: `0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141`
-- **secp256k1 N/2**: `0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0`
-
-## Testing
-
-### Run account query
-
-```bash
-go run main.go
-```
-
-### Build transfer example
-
-```bash
-go build -o examples/transfer ./examples
-```
-
-### Test with transfer
-
-```bash
-export ACTIVE_WIF="5Kxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-./examples/transfer
-```
-
-## Compatibility
-
-- ✅ Python nectarlite library (1:1 matching)
-- ✅ HIVE blockchain consensus rules
-- ✅ Go 1.16+ versions
-- ✅ Cross-platform (Linux, macOS, Windows)
-
-## Dependencies
-
-```text
-github.com/btcsuite/btcd/btcutil                        v1.x    # WIF key handling
-github.com/decred/dcrd/dcrec/secp256k1/v4                       # ECDSA signing (SignCompact)
-github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa                 # Signature operations
-```
-
-**Note**: Uses Decred's secp256k1 library (not go-ethereum) for proper compact signature generation with embedded recovery IDs.
-
-## Documentation
-
-See detailed documentation in:
-
-- `IMPLEMENTATION_SUMMARY.md` - Complete feature overview
-- `SIGNING_IMPLEMENTATION.md` - Step-by-step signing process
-- `RECOVERY_ID_DEEP_DIVE.md` - Recovery ID mathematics
-- `WIRE_FORMAT.md` - STEEM/SBD conversion explained
-- `CANONICAL_SIGNATURES.md` - Signature canonicalization
-
-## Troubleshooting
-
-### "signature is not canonical"
-
-- Cause: s > N/2 not being canonicalized
-- Solution: Ensure s canonicalization is enabled (it is by default)
-
-### "unable to reconstruct public key from signature"
-
-- Cause: Recovery ID not adjusted after s flip
-- Solution: Check recovery ID bit flip logic (implemented)
-
-### "Bad Cast: Invalid cast from null_type to Array"
-
-- Cause: Node doesn't support get_transaction_hex
-- Solution: Try different node (e.g., api.openhive.network)
-
-## Contributing
-
-This implementation closely matches the Python reference. Changes should:
-
-1. Maintain compatibility with Python nectarlite
-2. Include proper error handling
-3. Have comprehensive documentation
-4. Pass all existing tests
-
-## License
-
-See LICENSE file for details.
-
-## Support
-
-For issues and questions:
-
-- Check the documentation files
-- Review the example code
-- Consult the Python reference implementation
+If you are building high-throughput backend services, bots, or block indexers on Hive, Anther is your foundation.
 
 ---
 
-**Implementation Status**: ✅ COMPLETE
-**Blockchain Ready**: ✅ YES
-**Production Ready**: ✅ YES
-**Last Updated**: October 18, 2025
+**Secured and Native:** Anther uses the battle-tested **secp256k1** and **btcutil** packages, and implements a native binary serialization engine. It has zero external dependencies for protocol-level serialization and signing.
+
+---
+
+## Why Anther?
+
+The Hive ecosystem deserves infrastructure that is safe and fast by default.
+
+### 🔒 Audited Cryptography & Local Serialization
+
+Anther strips out deprecated RPC-based serialization (`get_transaction_hex`). In its place:
+
+- **[btcutil](https://github.com/btcsuite/btcd/tree/master/btcutil)**: Audited, robust package for handling WIF key formats and Base58 checksum encodings.
+- **[secp256k1/ecdsa](https://github.com/decred/dcrd/tree/master/dcrec/secp256k1)**: Uses Decred's secp256k1 compact signature engine to generate canonical signatures (s ≤ N/2) and recovery IDs natively.
+- **Offline Serialization**: Encodes operations (`Vote`, `Comment`, `Transfer`, `CommentOptions`, `CreateClaimedAccount`, `AccountUpdate`, etc.) into exact consensus-compatible wire bytes locally.
+
+### ⚡ Concurrency & Blockchain Streaming
+
+Anther leverages Go's concurrency primitives to provide native blockchain feeds:
+
+- **Goroutine & Channel Streams**: Streams blocks (`StreamBlocks`) or applied/virtual operations (`StreamOperations`) natively via Go channels.
+- **Node Failover & Retry Backoff**: Transparently retries failed requests and falls over to alternative nodes with exponential backoff.
+- **Context-Aware API**: Fully supports Go's `context.Context` for deadlines and cancellation across all network operations.
+
+### 🔒 Private Memo Encryption (ECIES)
+
+Anther features built-in support for ECIES memo encryption and decryption matching Pollen and Nectar implementations:
+
+- **secp256k1 ECDH**: Derives shared secrets using Elliptic Curve Diffie-Hellman (`btcec.GenerateSharedSecret`).
+- **AES-CBC-256 PKCS#7**: Secure encryption/decryption with in-memory padding validation.
+- **Fallback Decryption**: Transparently falls back to raw strings for legacy/unpadded memos.
+
+### 🔌 Ecosystem Alignment
+
+Anther is the Go counterpart to **[Pollen](https://github.com/srbde/pollen)** (TypeScript) and **[Nectar](https://github.com/srbde/hive-nectar)** (Python). Together, they form a unified, secure foundation for building cross-platform Hive applications under the **SRBDE** umbrella.
+
+---
+
+## 🚀 Quick Start
+
+Requires Go >= 1.20.
+
+```bash
+go get github.com/thecrazygm/anther
+```
+
+### Read account data (Go)
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/thecrazygm/anther/account"
+	"github.com/thecrazygm/anther/client"
+)
+
+func main() {
+	// Initialize client
+	api := client.NewClient([]string{"https://api.hive.blog"}, 30)
+
+	// Fetch account
+	acc := account.NewAccount("thecrazygm", api)
+	if err := acc.Refresh(); err != nil {
+		log.Fatalf("failed to fetch account: %v", err)
+	}
+
+	fmt.Printf("Account:      %s\n", acc.Name)
+	fmt.Printf("HIVE Balance: %v\n", acc.Data["balance"])
+	fmt.Printf("HBD Balance:  %v\n", acc.Data["hbd_balance"])
+}
+```
+
+### Sign and broadcast a transaction
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/thecrazygm/anther/client"
+	"github.com/thecrazygm/anther/transaction"
+)
+
+func main() {
+	api := client.NewClient([]string{"https://api.hive.blog"}, 30)
+	tx := transaction.NewTransaction(api)
+
+	// Add operations
+	tx.AppendOp(&transaction.Transfer{
+		From:   "youraccount",
+		To:     "recipient",
+		Amount: "0.001 HIVE",
+		Memo:   "Sent with Anther 🌿",
+	})
+
+	// Sign transaction offline
+	wif := os.Getenv("ACTIVE_WIF")
+	if err := tx.Sign(wif); err != nil {
+		log.Fatalf("failed to sign transaction: %v", err)
+	}
+
+	// Broadcast
+	result, err := tx.Broadcast()
+	if err != nil {
+		log.Fatalf("failed to broadcast: %v", err)
+	}
+	fmt.Printf("Transaction broadcasted: %v\n", result)
+}
+```
+
+### Stream operations live
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/thecrazygm/anther/client"
+)
+
+func main() {
+	api := client.NewClient([]string{"https://api.hive.blog"}, 30)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Stream irreversible transfer operations
+	ops, errs := api.StreamOperations(ctx, 0, client.Irreversible, []string{"transfer"})
+
+	for {
+		select {
+		case op := <-ops:
+			if op != nil {
+				fmt.Printf("Transfer [Block %d]: %v\n", op.Block, op.Op[1])
+			}
+		case err := <-errs:
+			if err != nil {
+				log.Printf("Streaming error: %v", err)
+			}
+		case <-ctx.Done():
+			fmt.Println("Streaming stopped.")
+			return
+		}
+	}
+}
+```
+
+---
+
+## 🛠️ Building and Testing
+
+Anther uses standard Go tooling alongside a structured Makefile.
+
+```bash
+# Auto-format codebase
+make fmt
+
+# Run all unit tests with the race detector
+make test
+
+# Compile all modules
+make build
+```
+
+---
+
+## 📜 Standing on Shoulders
+
+Anther is a completely original Go library designed from the ground up to bring Hive development to the Go ecosystem. It was built using the TAPOS headers, transaction signatures, and cryptographic standards verified by the SRBDE team to ensure 100% mathematical consensus compatibility with the Hive blockchain.
+
+---
+
+## 🌐 Built by SRBDE
+
+**Anther** is developed and maintained by the **Sustainable Resource and Business Development Enterprise (SRBDE)** — an open-source infrastructure organization building tools and platforms for communities that build things together.
+
+We apply the logic of agricultural sustainability to software: the goal is always to return more to the ecosystem than we extract.
+
+- **Open source is our value, not just our business model.**
+- **Our commercial products fund our open-source core. The open work is the mission.**
+
+### Explore the Ecosystem
+
+| Project                                             | Description                    |
+| --------------------------------------------------- | ------------------------------ |
+| [Pollen](https://github.com/srbde/pollen)           | The modern Hive TypeScript SDK |
+| [Hive-Nectar](https://github.com/srbde/hive-nectar) | The modern Hive Python SDK     |
+| [ecoinstats.net](https://ecoinstats.net)            | SRBDE corporate hub            |
+| [thecrazygm.com](https://thecrazygm.com)            | Open gaming tools & TTRPGs     |
+
+---
+
+## 🤝 Contributing
+
+Audits, forks, and pull requests are welcome. **Anther** is built to last for the decade, not the quarter. If you find a security issue, please open a private advisory rather than a public issue.

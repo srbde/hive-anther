@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"math"
 	"testing"
 )
@@ -72,4 +73,27 @@ func TestAmountBytes(t *testing.T) {
 			t.Fatalf("expected error for long symbol")
 		}
 	})
+}
+
+func TestAppliedOperationUnmarshal(t *testing.T) {
+	jsonData := `{
+		"trx_id": "0000000000000000000000000000000000000000",
+		"block": 106666224,
+		"trx_in_block": 4294967295,
+		"op_in_trx": 4294967295,
+		"virtual_op": true,
+		"op": ["custom_json", {"id": "test"}]
+	}`
+
+	var op AppliedOperation
+	if err := json.Unmarshal([]byte(jsonData), &op); err != nil {
+		t.Fatalf("failed to unmarshal AppliedOperation: %v", err)
+	}
+
+	if op.TrxInBlock != 4294967295 {
+		t.Errorf("expected TrxInBlock 4294967295, got %d", op.TrxInBlock)
+	}
+	if op.OpInTrx != 4294967295 {
+		t.Errorf("expected OpInTrx 4294967295, got %d", op.OpInTrx)
+	}
 }

@@ -1,3 +1,4 @@
+// Package types defines the core structures and types used across the Anther library for Hive blockchain data models and serialization.
 package types
 
 import (
@@ -6,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"time"
 )
 
 // Amount represents a Hive asset (e.g., "100.000 HIVE").
@@ -109,4 +111,86 @@ func parseFloat(s string) (float64, error) {
 	var f float64
 	_, err := fmt.Sscanf(s, "%f", &f)
 	return f, err
+}
+
+// DynamicGlobalProperties represents the dynamic global properties of the Hive blockchain.
+type DynamicGlobalProperties struct {
+	HeadBlockNumber          uint32 `json:"head_block_number"`
+	HeadBlockID              string `json:"head_block_id"`
+	Time                     string `json:"time"`
+	LastIrreversibleBlockNum uint32 `json:"last_irreversible_block_num"`
+}
+
+// Manabar represents a player's voting or RC mana bar.
+type Manabar struct {
+	CurrentMana    float64 `json:"current_mana,string"`
+	LastUpdateTime int64   `json:"last_update_time"`
+}
+
+// AccountData represents Hive account query results.
+type AccountData struct {
+	Name          string  `json:"name"`
+	VotingPower   float64 `json:"voting_power"`
+	VotingManabar Manabar `json:"voting_manabar"`
+	LastVoteTime  string  `json:"last_vote_time"`
+	Balance       string  `json:"balance"`
+	HbdBalance    string  `json:"hbd_balance"`
+	VestingShares string  `json:"vesting_shares"`
+	Created       string  `json:"created"`
+}
+
+// RCInfo represents a player's Resource Credit information.
+type RCInfo struct {
+	LastMana       int64     `json:"last_mana"`
+	CurrentMana    int64     `json:"current_mana"`
+	MaxMana        int64     `json:"max_mana"`
+	LastUpdateTime time.Time `json:"last_update_time"`
+	LastPercent    float64   `json:"last_percent"`
+	CurrentPercent float64   `json:"current_percent"`
+}
+
+// BlockHeader represents the header of a Hive block.
+type BlockHeader struct {
+	Previous              string `json:"previous"`
+	Timestamp             string `json:"timestamp"`
+	Witness               string `json:"witness"`
+	TransactionMerkleRoot string `json:"transaction_merkle_root"`
+	Extensions            []any  `json:"extensions"`
+}
+
+// OperationTuple represents an operation inside a block transaction: [op_name, op_data]
+type OperationTuple []any
+
+// TransactionInBlock represents a transaction inside a block.
+type TransactionInBlock struct {
+	RefBlockNum    uint16           `json:"ref_block_num"`
+	RefBlockPrefix uint32           `json:"ref_block_prefix"`
+	Expiration     string           `json:"expiration"`
+	Operations     []OperationTuple `json:"operations"`
+	Extensions     []any            `json:"extensions"`
+	Signatures     []string         `json:"signatures"`
+}
+
+// Block represents a full signed Hive block.
+type Block struct {
+	BlockID               string               `json:"block_id"`
+	Previous              string               `json:"previous"`
+	Timestamp             string               `json:"timestamp"`
+	Witness               string               `json:"witness"`
+	TransactionMerkleRoot string               `json:"transaction_merkle_root"`
+	Extensions            []any                `json:"extensions"`
+	WitnessSignature      string               `json:"witness_signature"`
+	Transactions          []TransactionInBlock `json:"transactions"`
+	TransactionIDs        []string             `json:"transaction_ids"`
+	SigningKey            string               `json:"signing_key"`
+}
+
+// AppliedOperation represents an operation applied to the blockchain.
+type AppliedOperation struct {
+	TrxID      string         `json:"trx_id"`
+	Block      uint32         `json:"block"`
+	TrxInBlock uint32         `json:"trx_in_block"`
+	OpInTrx    uint32         `json:"op_in_trx"`
+	VirtualOp  bool           `json:"virtual_op"`
+	Op         OperationTuple `json:"op"`
 }

@@ -1,4 +1,4 @@
-module github.com/thecrazygm/nectar-go
+module github.com/thecrazygm/anther
 
 go 1.26.3
 

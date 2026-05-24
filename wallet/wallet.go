@@ -1,11 +1,12 @@
+// Package wallet provides a simple in-memory key wallet to manage private keys for accounts and sign blockchain transactions locally.
 package wallet
 
 import (
 	"fmt"
 
 	"github.com/btcsuite/btcd/btcutil"
-	"github.com/thecrazygm/nectar-go/exceptions"
-	"github.com/thecrazygm/nectar-go/transaction"
+	"github.com/thecrazygm/anther/exceptions"
+	"github.com/thecrazygm/anther/transaction"
 )
 
 // Wallet is a simple in-memory wallet for managing Hive private keys.

@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/thecrazygm/nectar-go/client"
-	"github.com/thecrazygm/nectar-go/haf"
+	"github.com/thecrazygm/anther/client"
+	"github.com/thecrazygm/anther/haf"
 )
 
 func TestRefresh(t *testing.T) {
