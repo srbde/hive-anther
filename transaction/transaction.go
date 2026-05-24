@@ -136,8 +136,10 @@ func (tx *Transaction) Broadcast() (any, error) {
 	}
 
 	txDict := tx.toDict()
-	return tx.API.Call("condenser_api", "broadcast_transaction_synchronous", []any{txDict})
+	return tx.API.Call("condenser_api", "broadcast_transaction", []any{txDict})
 }
+
+
 
 // toDict converts the transaction to a dictionary.
 func (tx *Transaction) toDict() map[string]any {

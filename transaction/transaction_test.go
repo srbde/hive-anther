@@ -98,7 +98,7 @@ func TestSignAndBroadcast(t *testing.T) {
 			response["result"] = map[string]any{
 				"hex": "deadbeefcafebabe",
 			}
-		case "condenser_api.broadcast_transaction_synchronous":
+		case "condenser_api.broadcast_transaction":
 			atomic.AddInt64(&broadcastCalled, 1)
 			params, _ := payload["params"].([]any)
 			if len(params) != 1 {
