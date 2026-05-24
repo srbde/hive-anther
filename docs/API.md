@@ -228,6 +228,7 @@ Package client provides a JSON\-RPC client to interact with Hive blockchain node
   - [func \(c \*Client\) GetDynamicGlobalPropertiesStruct\(\) \(\*types.DynamicGlobalProperties, error\)](<#Client.GetDynamicGlobalPropertiesStruct>)
   - [func \(c \*Client\) GetNextNode\(\) string](<#Client.GetNextNode>)
   - [func \(c \*Client\) GetOpsInBlock\(blockNum uint32, onlyVirtual bool\) \(\[\]\*types.AppliedOperation, error\)](<#Client.GetOpsInBlock>)
+  - [func \(c \*Client\) GetTransaction\(trxID string\) \(any, error\)](<#Client.GetTransaction>)
   - [func \(c \*Client\) StreamBlocks\(ctx context.Context, startBlock uint32, mode StreamingMode\) \(\<\-chan \*types.Block, \<\-chan error\)](<#Client.StreamBlocks>)
   - [func \(c \*Client\) StreamOperations\(ctx context.Context, startBlock uint32, mode StreamingMode, filter \[\]string\) \(\<\-chan \*types.AppliedOperation, \<\-chan error\)](<#Client.StreamOperations>)
 - [type StreamingMode](<#StreamingMode>)
@@ -318,6 +319,15 @@ func (c *Client) GetOpsInBlock(blockNum uint32, onlyVirtual bool) ([]*types.Appl
 ```
 
 GetOpsInBlock fetches applied operations in a block.
+
+<a name="Client.GetTransaction"></a>
+### func \(\*Client\) GetTransaction
+
+```go
+func (c *Client) GetTransaction(trxID string) (any, error)
+```
+
+GetTransaction fetches a transaction by its transaction ID.
 
 <a name="Client.StreamBlocks"></a>
 ### func \(\*Client\) StreamBlocks
@@ -423,6 +433,16 @@ func SignTransactionHexWithChainID(txHex string, wif string, chainID string) (st
 ```
 
 SignTransactionHexWithChainID signs a transaction hex string with the provided chain ID.
+
+# examples
+
+```go
+import "github.com/thecrazygm/anther/examples"
+```
+
+## Index
+
+
 
 # exceptions
 
@@ -752,6 +772,7 @@ Package transaction handles constructing, encoding, signing, verifying, and broa
   - [func \(tx \*Transaction\) AppendOp\(op Operation\)](<#Transaction.AppendOp>)
   - [func \(tx \*Transaction\) Broadcast\(\) \(any, error\)](<#Transaction.Broadcast>)
   - [func \(tx \*Transaction\) Bytes\(\) \(\[\]byte, error\)](<#Transaction.Bytes>)
+  - [func \(tx \*Transaction\) ID\(\) \(string, error\)](<#Transaction.ID>)
   - [func \(tx \*Transaction\) Sign\(wif string\) error](<#Transaction.Sign>)
   - [func \(tx \*Transaction\) SignMany\(wifKeys \[\]string\) error](<#Transaction.SignMany>)
   - [func \(tx \*Transaction\) VerifyAuthority\(auth \*Authority, chainID string\) \(bool, error\)](<#Transaction.VerifyAuthority>)
@@ -1271,6 +1292,15 @@ func (tx *Transaction) Bytes() ([]byte, error)
 ```
 
 Bytes returns the serialized transaction bytes \(for signing\)
+
+<a name="Transaction.ID"></a>
+### func \(\*Transaction\) ID
+
+```go
+func (tx *Transaction) ID() (string, error)
+```
+
+ID calculates and returns the transaction ID \(first 20 bytes of SHA\-256 hash of serialized transaction bytes\).
 
 <a name="Transaction.Sign"></a>
 ### func \(\*Transaction\) Sign

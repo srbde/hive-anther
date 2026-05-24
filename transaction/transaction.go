@@ -129,15 +129,45 @@ func (tx *Transaction) VerifyAuthority(auth *Authority, chainID string) (bool, e
 	return totalWeight >= auth.WeightThreshold, nil
 }
 
+// ID calculates and returns the transaction ID (first 20 bytes of SHA-256 hash of serialized transaction bytes).
+func (tx *Transaction) ID() (string, error) {
+	txBytes, err := tx.Bytes()
+	if err != nil {
+		return "", err
+	}
+	hash := sha256.Sum256(txBytes)
+	return hex.EncodeToString(hash[:20]), nil
+}
+
 // Broadcast the transaction to the network.
 func (tx *Transaction) Broadcast() (any, error) {
 	if len(tx.Signatures) == 0 {
 		return nil, errors.New("transaction is not signed")
 	}
 
+	txID, err := tx.ID()
+	if err != nil {
+		return nil, fmt.Errorf("failed to compute transaction ID: %w", err)
+	}
+
 	txDict := tx.toDict()
-	return tx.API.Call("condenser_api", "broadcast_transaction", []any{txDict})
+	resp, err := tx.API.Call("condenser_api", "broadcast_transaction", []any{txDict})
+	if err != nil {
+		return nil, err
+	}
+
+	// Inject the computed transaction ID into the result map
+	if respMap, ok := resp.(map[string]any); ok {
+		respMap["id"] = txID
+		return respMap, nil
+	}
+
+	return map[string]any{
+		"id":     txID,
+		"result": resp,
+	}, nil
 }
+
 
 
 

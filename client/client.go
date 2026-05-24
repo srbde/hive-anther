@@ -166,6 +166,11 @@ func (c *Client) GetDynamicGlobalPropertiesStruct() (*types.DynamicGlobalPropert
 	return &props, nil
 }
 
+// GetTransaction fetches a transaction by its transaction ID.
+func (c *Client) GetTransaction(trxID string) (any, error) {
+	return c.Call("condenser_api", "get_transaction", []any{trxID})
+}
+
 // GetBlock fetches a signed block by number.
 func (c *Client) GetBlock(blockNum uint32) (*types.Block, error) {
 	resp, err := c.Call("condenser_api", "get_block", []any{blockNum})
