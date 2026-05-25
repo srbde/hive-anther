@@ -232,6 +232,13 @@ func (c *Client) GetBlock(blockNum uint32) (*types.Block, error) {
 
 // GetBlockRange fetches a range of blocks starting from startingBlockNum.
 func (c *Client) GetBlockRange(startingBlockNum uint32, count uint32) ([]*types.Block, error) {
+	if count == 0 {
+		return nil, fmt.Errorf("block range count must be greater than 0")
+	}
+	if count > 1000 {
+		return nil, fmt.Errorf("block range count cannot exceed 1000")
+	}
+
 	params := map[string]any{
 		"starting_block_num": startingBlockNum,
 		"count":              count,

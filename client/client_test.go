@@ -361,4 +361,14 @@ func TestGetBlockRange(t *testing.T) {
 	if blocks[0].BlockID != "block-id-100" || blocks[1].BlockID != "block-id-101" || blocks[2].BlockID != "block-id-102" {
 		t.Fatalf("unexpected block range response content")
 	}
+
+	// Test count = 0 validation
+	if _, err := c.GetBlockRange(100, 0); err == nil || err.Error() != "block range count must be greater than 0" {
+		t.Fatalf("expected error for count = 0, got: %v", err)
+	}
+
+	// Test count > 1000 validation
+	if _, err := c.GetBlockRange(100, 1001); err == nil || err.Error() != "block range count cannot exceed 1000" {
+		t.Fatalf("expected error for count > 1000, got: %v", err)
+	}
 }
