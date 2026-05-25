@@ -145,3 +145,28 @@ func (c *Client) GetBlockHeader(blockNum uint32) (*types.BlockHeader, error) {
 	}
 	return &header, nil
 }
+
+// GetKeyReferences returns the account names associated with the given public keys.
+func (c *Client) GetKeyReferences(keys []string) ([]string, error) {
+	if len(keys) == 0 {
+		return nil, fmt.Errorf("keys slice cannot be empty")
+	}
+	resp, err := c.Call("condenser_api", "get_key_references", []any{keys})
+	if err != nil {
+		return nil, err
+	}
+	bytesVal, err := json.Marshal(resp)
+	if err != nil {
+		return nil, err
+	}
+	var refs [][]string
+	if err := json.Unmarshal(bytesVal, &refs); err != nil {
+		return nil, err
+	}
+
+	var result []string
+	for _, sublist := range refs {
+		result = append(result, sublist...)
+	}
+	return result, nil
+}

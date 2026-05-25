@@ -28,8 +28,22 @@ func main() {
 	nodes := []string{"https://api.hive.blog"}
 	api := client.NewClient(nodes, 30)
 
-	fmt.Println("Querying blockchain for @thecrazygm...")
-	resp, err := api.Call("condenser_api", "get_accounts", []any{[]string{"thecrazygm"}})
+	fmt.Println("Looking up account names for the derived public key...")
+	refs, err := api.GetKeyReferences([]string{derivedPubKey})
+	if err != nil {
+		log.Fatalf("Error looking up key references: %v", err)
+	}
+
+	accountName := "thecrazygm" // fallback
+	if len(refs) > 0 {
+		accountName = refs[0]
+		fmt.Printf("✓ Public key is registered to account: @%s\n\n", accountName)
+	} else {
+		fmt.Printf("⚠️ Public key is not registered to any account. Falling back to @%s\n\n", accountName)
+	}
+
+	fmt.Printf("Querying blockchain for @%s...\n", accountName)
+	resp, err := api.Call("condenser_api", "get_accounts", []any{[]string{accountName}})
 	if err != nil {
 		log.Fatalf("Error querying account: %v", err)
 	}
@@ -44,7 +58,7 @@ func main() {
 		log.Fatal("Invalid account response format")
 	}
 
-	fmt.Println("\nRegistered Public Keys on @thecrazygm:")
+	fmt.Printf("\nRegistered Public Keys on @%s:\n", accountName)
 
 	// Print active authority keys
 	if active, ok := acc["active"].(map[string]any); ok {
