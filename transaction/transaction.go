@@ -11,10 +11,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/thecrazygm/anther/client"
 	cryptoutil "github.com/thecrazygm/anther/crypto"
 	"github.com/thecrazygm/anther/types"
 )
+
+// RPCClient defines the client behaviors required by Transaction operations.
+type RPCClient interface {
+	GetDynamicGlobalProperties() (map[string]any, error)
+	Call(api string, method string, params any) (any, error)
+}
 
 // OperationNames maps operation names to their numeric IDs
 var OperationNames = map[string]int{
@@ -32,7 +37,7 @@ type Transaction struct {
 	Expiration     time.Time
 	Operations     []Operation
 	Signatures     []string
-	API            *client.Client
+	API            RPCClient
 }
 
 // Operation is an interface for all Hive operations.
@@ -42,7 +47,7 @@ type Operation interface {
 }
 
 // NewTransaction creates a new Transaction.
-func NewTransaction(api *client.Client) *Transaction {
+func NewTransaction(api RPCClient) *Transaction {
 	return &Transaction{
 		API:        api,
 		Operations: []Operation{},

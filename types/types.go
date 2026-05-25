@@ -259,3 +259,49 @@ type AppliedOperation struct {
 	VirtualOp  bool           `json:"virtual_op"`
 	Op         OperationTuple `json:"op"`
 }
+
+// ChainProperties represents the blockchain configuration properties.
+type ChainProperties struct {
+	AccountCreationFee string `json:"account_creation_fee"`
+	MaximumBlockSize   uint32 `json:"maximum_block_size"`
+	HbdInterestRate    uint16 `json:"hbd_interest_rate"`
+}
+
+// Price represents Hive base/quote asset ratio.
+type Price struct {
+	Base  string `json:"base"`
+	Quote string `json:"quote"`
+}
+
+// HistoryItem represents an entry in the account history.
+type HistoryItem struct {
+	Seq uint64
+	Op  AppliedOperation
+}
+
+// UnmarshalJSON customizes unmarshaling for HistoryItem to parse the [seq, op] array format.
+func (h *HistoryItem) UnmarshalJSON(data []byte) error {
+	var arr []json.RawMessage
+	if err := json.Unmarshal(data, &arr); err != nil {
+		return err
+	}
+	if len(arr) != 2 {
+		return fmt.Errorf("invalid history item format: expected 2 elements, got %d", len(arr))
+	}
+	if err := json.Unmarshal(arr[0], &h.Seq); err != nil {
+		return err
+	}
+	if err := json.Unmarshal(arr[1], &h.Op); err != nil {
+		return err
+	}
+	return nil
+}
+
+// VestingDelegation represents a vesting delegation on the Hive blockchain.
+type VestingDelegation struct {
+	ID                uint64 `json:"id"`
+	Delegator         string `json:"delegator"`
+	Delegatee         string `json:"delegatee"`
+	VestingShares     string `json:"vesting_shares"`
+	MinDelegationTime Time   `json:"min_delegation_time"`
+}

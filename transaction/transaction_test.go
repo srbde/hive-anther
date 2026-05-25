@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -9,13 +10,40 @@ import (
 	"testing"
 	"time"
 
-	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/btcsuite/btcd/btcutil"
-	"github.com/btcsuite/btcd/btcutil/base58"
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/thecrazygm/anther/client"
 	"github.com/thecrazygm/anther/crypto"
 )
+
+type mockRPCClient struct {
+	url string
+}
+
+func (m *mockRPCClient) Call(api string, method string, params any) (any, error) {
+	payload := map[string]any{
+		"jsonrpc": "2.0",
+		"method":  api + "." + method,
+		"params":  params,
+		"id":      1,
+	}
+	body, _ := json.Marshal(payload)
+	resp, err := http.Post(m.url, "application/json", bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var result map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return result["result"], nil
+}
+
+func (m *mockRPCClient) GetDynamicGlobalProperties() (map[string]any, error) {
+	resp, err := m.Call("condenser_api", "get_dynamic_global_properties", nil)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(map[string]any), nil
+}
 
 type dummyOp struct {
 	name string
@@ -32,16 +60,15 @@ func (d dummyOp) Bytes() ([]byte, error) {
 
 func generateTestWIF(t *testing.T) string {
 	t.Helper()
-	priv := [32]byte{}
+	priv := make([]byte, 32)
 	for i := range priv {
 		priv[i] = byte(i + 1)
 	}
-	key, _ := btcec.PrivKeyFromBytes(priv[:])
-	wif, err := btcutil.NewWIF(key, &chaincfg.MainNetParams, false)
-	if err != nil {
-		t.Fatalf("failed to create test wif: %v", err)
-	}
-	return wif.String()
+	payload := append([]byte{0x80}, priv...)
+	h1 := sha256.Sum256(payload)
+	h2 := sha256.Sum256(h1[:])
+	wifBytes := append(payload, h2[:4]...)
+	return crypto.Base58Encode(wifBytes)
 }
 
 func TestAppendOpAndToDict(t *testing.T) {
@@ -121,7 +148,7 @@ func TestSignAndBroadcast(t *testing.T) {
 	}))
 	defer server.Close()
 
-	api := client.NewClient([]string{server.URL}, 30)
+	api := &mockRPCClient{url: server.URL}
 	tx := NewTransaction(api)
 	tx.AppendOp(dummyOp{name: "custom", data: map[string]any{"foo": "bar"}})
 
@@ -530,17 +557,23 @@ func TestAccountUpdateBytes(t *testing.T) {
 
 func TestVerifyAuthority(t *testing.T) {
 	wif1 := generateTestWIF(t)
-	wifDecoded1, _ := btcutil.DecodeWIF(wif1)
-	pubBytes1 := wifDecoded1.PrivKey.PubKey().SerializeCompressed()
-	pubKeyStr1 := "STM" + base58.Encode(append(pubBytes1, btcutil.Hash160(pubBytes1)[:4]...))
+	pubKeyStr1, err := crypto.WIFToPublicKey(wif1)
+	if err != nil {
+		t.Fatalf("failed to derive pubkey1: %v", err)
+	}
 
 	priv2Bytes := make([]byte, 32)
 	priv2Bytes[0] = 0x99
-	priv2, _ := btcec.PrivKeyFromBytes(priv2Bytes)
-	wifDecoded2, _ := btcutil.NewWIF(priv2, &chaincfg.MainNetParams, false)
-	wif2 := wifDecoded2.String()
-	pubBytes2 := priv2.PubKey().SerializeCompressed()
-	pubKeyStr2 := "STM" + base58.Encode(append(pubBytes2, btcutil.Hash160(pubBytes2)[:4]...))
+	payload := append([]byte{0x80}, priv2Bytes...)
+	h1 := sha256.Sum256(payload)
+	h2 := sha256.Sum256(h1[:])
+	wif2Bytes := append(payload, h2[:4]...)
+	wif2 := crypto.Base58Encode(wif2Bytes)
+
+	pubKeyStr2, err := crypto.WIFToPublicKey(wif2)
+	if err != nil {
+		t.Fatalf("failed to derive pubkey2: %v", err)
+	}
 
 	tx := NewTransaction(nil)
 	tx.RefBlockNum = 12345

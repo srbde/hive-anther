@@ -1,15 +1,14 @@
 package wallet
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/btcsuite/btcd/btcutil"
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/thecrazygm/anther/client"
+	"github.com/thecrazygm/anther/crypto"
 	"github.com/thecrazygm/anther/transaction"
 )
 
@@ -19,12 +18,11 @@ func generateTestWIF(t *testing.T) string {
 	for i := range priv {
 		priv[i] = byte(i + 1)
 	}
-	key, _ := btcec.PrivKeyFromBytes(priv[:])
-	wif, err := btcutil.NewWIF(key, &chaincfg.MainNetParams, false)
-	if err != nil {
-		t.Fatalf("failed to create test wif: %v", err)
-	}
-	return wif.String()
+	payload := append([]byte{0x80}, priv[:]...)
+	h1 := sha256.Sum256(payload)
+	h2 := sha256.Sum256(h1[:])
+	wifBytes := append(payload, h2[:4]...)
+	return crypto.Base58Encode(wifBytes)
 }
 
 func TestWalletAddAndGetKey(t *testing.T) {

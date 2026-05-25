@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/btcsuite/btcd/btcutil/base58"
+	"github.com/thecrazygm/anther/crypto"
 	"github.com/thecrazygm/anther/types"
 )
 
@@ -77,7 +77,7 @@ func serializePublicKey(buf *bytes.Buffer, pubKeyStr string) error {
 	if len(pubKeyStr) > 3 && (pubKeyStr[:3] == "STM" || pubKeyStr[:3] == "TST") {
 		trimmed = pubKeyStr[3:]
 	}
-	decoded := base58.Decode(trimmed)
+	decoded := crypto.Base58Decode(trimmed)
 	if len(decoded) < 33 {
 		return fmt.Errorf("invalid public key length: %d", len(decoded))
 	}

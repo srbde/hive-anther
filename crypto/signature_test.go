@@ -6,26 +6,22 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/btcsuite/btcd/btcutil"
-	"github.com/btcsuite/btcd/btcutil/base58"
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 )
 
 func generateTestWIF(t *testing.T) string {
 	t.Helper()
-	priv := [32]byte{}
+	priv := make([]byte, 32)
 	for i := range priv {
 		priv[i] = byte(i + 1)
 	}
-	key, _ := btcec.PrivKeyFromBytes(priv[:])
-	wif, err := btcutil.NewWIF(key, &chaincfg.MainNetParams, true)
-	if err != nil {
-		t.Fatalf("failed to create test wif: %v", err)
-	}
-	return wif.String()
+	payload := append([]byte{0x80}, priv...)
+	payload = append(payload, 0x01) // Compressed WIF
+	h1 := sha256.Sum256(payload)
+	h2 := sha256.Sum256(h1[:])
+	wifBytes := append(payload, h2[:4]...)
+	return Base58Encode(wifBytes)
 }
 
 func TestSignTransactionHexWithChainID(t *testing.T) {
@@ -81,15 +77,14 @@ func TestSignTransactionBytes(t *testing.T) {
 
 func TestRecoverPublicKey(t *testing.T) {
 	wif := generateTestWIF(t)
-	wifDecoded, err := btcutil.DecodeWIF(wif)
+	privKeyBytes, err := DecodeWIF(wif)
 	if err != nil {
 		t.Fatalf("failed to decode WIF: %v", err)
 	}
-	privKey := wifDecoded.PrivKey
-	expectedPub := privKey.PubKey()
+	privKeySEC := secp256k1.PrivKeyFromBytes(privKeyBytes)
+	expectedPub := privKeySEC.PubKey()
 
 	digest := sha256.Sum256([]byte("hello world"))
-	privKeySEC := secp256k1.PrivKeyFromBytes(privKey.Serialize())
 	compactSig := ecdsa.SignCompact(privKeySEC, digest[:], true)
 
 	recoveredPub, compressed, err := ecdsa.RecoverCompact(compactSig, digest[:])
@@ -106,17 +101,17 @@ func TestRecoverPublicKey(t *testing.T) {
 
 func TestRecoverKeyFromSignature(t *testing.T) {
 	wif := generateTestWIF(t)
-	wifDecoded, err := btcutil.DecodeWIF(wif)
+	privKeyBytes, err := DecodeWIF(wif)
 	if err != nil {
 		t.Fatalf("failed to decode WIF: %v", err)
 	}
-	privKey := wifDecoded.PrivKey
+	privKeySEC := secp256k1.PrivKeyFromBytes(privKeyBytes)
 
 	// Format expected pubkey
-	pubBytes := privKey.PubKey().SerializeCompressed()
-	checksum := btcutil.Hash160(pubBytes)
-	payload := append(pubBytes, checksum[:4]...)
-	expectedPubKeyStr := "STM" + base58.Encode(payload)
+	pubBytes := privKeySEC.PubKey().SerializeCompressed()
+	checksum := ripemd160Checksum(pubBytes)
+	payload := append(pubBytes, checksum...)
+	expectedPubKeyStr := "STM" + Base58Encode(payload)
 
 	digest := sha256.Sum256([]byte("hello world"))
 	sigHex, err := SignTransactionBytesWithChainID(digest[:], wif, HiveChainID)
@@ -124,13 +119,6 @@ func TestRecoverKeyFromSignature(t *testing.T) {
 		t.Fatalf("failed to sign: %v", err)
 	}
 
-	// SignTransactionBytes prepend chain ID, but here digest was signed.
-	// Actually SignTransactionBytesWithChainID appends chainID to the message, and hashes that.
-	// Wait! Let's check SignTransactionBytesWithChainID:
-	// message := append(chainIDBytes, txBytes...)
-	// digest := sha256.Sum256(message)
-	// So sigHex is the signature of sha256(chainID + digest).
-	// Let's compute the correct digest:
 	chainIDBytes, _ := hex.DecodeString(HiveChainID)
 	msg := append(chainIDBytes, digest[:]...)
 	msgDigest := sha256.Sum256(msg)

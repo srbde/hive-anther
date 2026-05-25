@@ -10,10 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/btcsuite/btcd/btcutil"
-	"github.com/btcsuite/btcd/btcutil/base58"
-	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"github.com/thecrazygm/anther/crypto"
 )
 
 // generateWIFForTest creates a new WIF key for testing.
@@ -23,15 +21,19 @@ func generateWIFForTest(t *testing.T, seed byte) (string, string) {
 	for i := range privBytes {
 		privBytes[i] = seed
 	}
-	privKey, _ := btcec.PrivKeyFromBytes(privBytes)
-	wif, err := btcutil.NewWIF(privKey, &chaincfg.MainNetParams, false)
+	// Uncompressed WIF payload
+	payload := append([]byte{0x80}, privBytes...)
+	h1 := sha256.Sum256(payload)
+	h2 := sha256.Sum256(h1[:])
+	wifBytes := append(payload, h2[:4]...)
+	wifStr := crypto.Base58Encode(wifBytes)
+
+	pubKeyStr, err := crypto.WIFToPublicKey(wifStr)
 	if err != nil {
-		t.Fatalf("failed to create WIF: %v", err)
+		t.Fatalf("failed to derive public key: %v", err)
 	}
-	pubBytes := privKey.PubKey().SerializeCompressed()
-	checksum := btcutil.Hash160(pubBytes)
-	payload := append(pubBytes, checksum[:4]...)
-	return wif.String(), "STM" + base58.Encode(payload)
+
+	return wifStr, pubKeyStr
 }
 
 func TestMemoEncodeDecode(t *testing.T) {
@@ -110,11 +112,11 @@ func TestMemoEncodeDecode(t *testing.T) {
 
 	t.Run("Legacy memo fallback (no length prefix)", func(t *testing.T) {
 		// Construct a legacy memo (just raw text encrypted in CBC, no varint string length prefix inside)
-		wifDecoded, err := btcutil.DecodeWIF(senderWif)
+		privKeyBytes, err := crypto.DecodeWIF(senderWif)
 		if err != nil {
 			t.Fatalf("failed to decode sender wif: %v", err)
 		}
-		senderPriv := wifDecoded.PrivKey
+		senderPriv := secp256k1.PrivKeyFromBytes(privKeyBytes)
 		senderPubBytes := senderPriv.PubKey().SerializeCompressed()
 
 		recPub, recPubBytes, err := parsePublicKey(receiverPub)
@@ -124,7 +126,7 @@ func TestMemoEncodeDecode(t *testing.T) {
 
 		// Nonce & Secret
 		nonce := uint64(987654321)
-		sharedX := btcec.GenerateSharedSecret(senderPriv, recPub)
+		sharedX := secp256k1.GenerateSharedSecret(senderPriv, recPub)
 		S := sha512.Sum512(sharedX)
 
 		buf := new(bytes.Buffer)
@@ -164,7 +166,7 @@ func TestMemoEncodeDecode(t *testing.T) {
 		envelopeBuf.Write(varintBuf[:n])
 		envelopeBuf.Write(ciphertext)
 
-		cypher := "#" + base58.Encode(envelopeBuf.Bytes())
+		cypher := "#" + crypto.Base58Encode(envelopeBuf.Bytes())
 
 		// Decode using receiverWif and verify fallback works
 		plain, err := Decode(receiverWif, cypher)

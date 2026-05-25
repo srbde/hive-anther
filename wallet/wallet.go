@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/btcsuite/btcd/btcutil"
+	"github.com/thecrazygm/anther/crypto"
 	"github.com/thecrazygm/anther/exceptions"
 	"github.com/thecrazygm/anther/transaction"
 )
@@ -31,12 +31,9 @@ func (w *Wallet) AddKey(account, role, wif string) error {
 	if account == "" {
 		return fmt.Errorf("account must be a non-empty string")
 	}
-	if len(wif) == 0 || wif[0] != '5' {
-		return exceptions.NewInvalidKeyFormatError("private WIF keys start with '5'")
-	}
 
 	// Validate WIF format
-	if _, err := btcutil.DecodeWIF(wif); err != nil {
+	if _, err := crypto.DecodeWIF(wif); err != nil {
 		return exceptions.NewInvalidKeyFormatError(fmt.Sprintf("invalid WIF format: %v", err))
 	}
 

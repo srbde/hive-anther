@@ -13,9 +13,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/btcsuite/btcd/btcutil"
-	"github.com/btcsuite/btcd/btcutil/base58"
+	"github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"github.com/thecrazygm/anther/crypto"
 )
 
 // pkcs7Pad appends PKCS#7 padding to data.
@@ -46,18 +45,18 @@ func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
 	return data[:length-padding], nil
 }
 
-// parsePublicKey decodes a Hive public key string (STM... or TST...) into btcec.PublicKey.
-func parsePublicKey(pubKeyStr string) (*btcec.PublicKey, []byte, error) {
+// parsePublicKey decodes a Hive public key string (STM... or TST...) into secp256k1.PublicKey.
+func parsePublicKey(pubKeyStr string) (*secp256k1.PublicKey, []byte, error) {
 	trimmed := pubKeyStr
 	if len(pubKeyStr) > 3 && (pubKeyStr[:3] == "STM" || pubKeyStr[:3] == "TST") {
 		trimmed = pubKeyStr[3:]
 	}
-	decoded := base58.Decode(trimmed)
+	decoded := crypto.Base58Decode(trimmed)
 	if len(decoded) < 33 {
 		return nil, nil, fmt.Errorf("invalid public key length: %d", len(decoded))
 	}
 	rawPub := decoded[:33]
-	pubKey, err := btcec.ParsePubKey(rawPub)
+	pubKey, err := secp256k1.ParsePubKey(rawPub)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -79,11 +78,11 @@ func Encode(senderWif string, recipientPubKeyStr string, memo string) (string, e
 	memoText := memo[1:]
 
 	// Decode WIF
-	wifDecoded, err := btcutil.DecodeWIF(senderWif)
+	privKeyBytes, err := crypto.DecodeWIF(senderWif)
 	if err != nil {
 		return "", fmt.Errorf("failed to decode WIF: %w", err)
 	}
-	senderPrivKey := wifDecoded.PrivKey
+	senderPrivKey := secp256k1.PrivKeyFromBytes(privKeyBytes)
 	senderPubBytes := senderPrivKey.PubKey().SerializeCompressed()
 
 	// Decode recipient public key
@@ -99,7 +98,7 @@ func Encode(senderWif string, recipientPubKeyStr string, memo string) (string, e
 	}
 
 	// Derive shared secret S
-	sharedX := btcec.GenerateSharedSecret(senderPrivKey, recipientPubKey)
+	sharedX := secp256k1.GenerateSharedSecret(senderPrivKey, recipientPubKey)
 	S := sha512.Sum512(sharedX)
 
 	// Derive encryption key materials
@@ -151,7 +150,7 @@ func Encode(senderWif string, recipientPubKeyStr string, memo string) (string, e
 	envelopeBuf.Write(varintBuf[:n])
 	envelopeBuf.Write(ciphertext)
 
-	return "#" + base58.Encode(envelopeBuf.Bytes()), nil
+	return "#" + crypto.Base58Encode(envelopeBuf.Bytes()), nil
 }
 
 // Decode decrypts a memo if it starts with "#".
@@ -161,7 +160,7 @@ func Decode(wif string, memo string) (string, error) {
 	}
 	memoBase58 := memo[1:]
 
-	decoded := base58.Decode(memoBase58)
+	decoded := crypto.Base58Decode(memoBase58)
 	if len(decoded) < 33+33+8+4 {
 		return "", errors.New("invalid encrypted memo payload length")
 	}
@@ -185,11 +184,11 @@ func Decode(wif string, memo string) (string, error) {
 	reader.Read(ciphertext)
 
 	// Decode WIF
-	wifDecoded, err := btcutil.DecodeWIF(wif)
+	privKeyBytes, err := crypto.DecodeWIF(wif)
 	if err != nil {
 		return "", fmt.Errorf("failed to decode WIF: %w", err)
 	}
-	myPrivKey := wifDecoded.PrivKey
+	myPrivKey := secp256k1.PrivKeyFromBytes(privKeyBytes)
 	myPubBytes := myPrivKey.PubKey().SerializeCompressed()
 
 	// Find the other public key
@@ -200,13 +199,13 @@ func Decode(wif string, memo string) (string, error) {
 		otherPubBytes = fromBytes
 	}
 
-	otherPubKey, err := btcec.ParsePubKey(otherPubBytes)
+	otherPubKey, err := secp256k1.ParsePubKey(otherPubBytes)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse counterparty public key: %w", err)
 	}
 
 	// Derive shared secret
-	sharedX := btcec.GenerateSharedSecret(myPrivKey, otherPubKey)
+	sharedX := secp256k1.GenerateSharedSecret(myPrivKey, otherPubKey)
 	S := sha512.Sum512(sharedX)
 
 	// Derive key materials

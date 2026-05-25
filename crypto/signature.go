@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -8,10 +9,9 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/btcsuite/btcd/btcutil"
-	"github.com/btcsuite/btcd/btcutil/base58"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
+	"golang.org/x/crypto/ripemd160"
 )
 
 const HiveChainID = "beeab0de00000000000000000000000000000000000000000000000000000000"
@@ -36,12 +36,11 @@ func SignTransactionBytesWithChainID(txBytes []byte, wif string, chainID string)
 	e := new(big.Int).SetBytes(digest[:])
 	e.Mod(e, N)
 
-	wifDecoded, err := btcutil.DecodeWIF(wif)
+	privKeyBytes, err := DecodeWIF(wif)
 	if err != nil {
 		return "", err
 	}
 
-	privKeyBytes := wifDecoded.PrivKey.Serialize()
 	privKeySEC := secp256k1.PrivKeyFromBytes(privKeyBytes)
 
 	compactSig := ecdsa.SignCompact(privKeySEC, digest[:], true)
@@ -111,12 +110,11 @@ func SignTransactionHexWithChainID(txHex string, wif string, chainID string) (st
 	e := new(big.Int).SetBytes(digest[:])
 	e.Mod(e, N)
 
-	wifDecoded, err := btcutil.DecodeWIF(wif)
+	privKeyBytes, err := DecodeWIF(wif)
 	if err != nil {
 		return "", err
 	}
 
-	privKeyBytes := wifDecoded.PrivKey.Serialize()
 	privKeySEC := secp256k1.PrivKeyFromBytes(privKeyBytes)
 
 	compactSig := ecdsa.SignCompact(privKeySEC, digest[:], true)
@@ -175,20 +173,64 @@ func RecoverKeyFromSignature(signatureHex string, digest []byte) (string, error)
 	}
 
 	pubBytes := pub.SerializeCompressed()
-	checksum := btcutil.Hash160(pubBytes)
-	payload := append(pubBytes, checksum[:4]...)
-	return "STM" + base58.Encode(payload), nil
+	checksum := ripemd160Checksum(pubBytes)
+	payload := append(pubBytes, checksum...)
+	return "STM" + Base58Encode(payload), nil
 }
 
 // WIFToPublicKey derives the Hive-formatted public key ("STM...") from a private WIF key.
 func WIFToPublicKey(wif string) (string, error) {
-	wifDecoded, err := btcutil.DecodeWIF(wif)
+	privKeyBytes, err := DecodeWIF(wif)
 	if err != nil {
 		return "", fmt.Errorf("invalid WIF key: %w", err)
 	}
 
-	pubBytes := wifDecoded.PrivKey.PubKey().SerializeCompressed()
-	checksum := btcutil.Hash160(pubBytes)
-	payload := append(pubBytes, checksum[:4]...)
-	return "STM" + base58.Encode(payload), nil
+	privKeySEC := secp256k1.PrivKeyFromBytes(privKeyBytes)
+	pubBytes := privKeySEC.PubKey().SerializeCompressed()
+	checksum := ripemd160Checksum(pubBytes)
+	payload := append(pubBytes, checksum...)
+	return "STM" + Base58Encode(payload), nil
+}
+
+// DecodeWIF decodes a private key in WIF format and returns the raw 32-byte private key.
+func DecodeWIF(wif string) ([]byte, error) {
+	decoded := Base58Decode(wif)
+	if len(decoded) < 5 {
+		return nil, fmt.Errorf("invalid WIF length")
+	}
+
+	// Double SHA256 checksum validation
+	data := decoded[:len(decoded)-4]
+	chk := decoded[len(decoded)-4:]
+
+	h1 := sha256.Sum256(data)
+	h2 := sha256.Sum256(h1[:])
+
+	if !bytes.Equal(chk, h2[:4]) {
+		return nil, fmt.Errorf("WIF checksum mismatch")
+	}
+
+	if data[0] != 0x80 {
+		return nil, fmt.Errorf("invalid WIF version byte: expected 0x80, got 0x%02x", data[0])
+	}
+
+	// Private key bytes are after the version byte
+	// If it is compressed, there is a trailing 0x01 byte at the end of the private key
+	// payload, which we should exclude.
+	privKeyBytes := data[1:]
+	if len(privKeyBytes) == 33 && privKeyBytes[32] == 0x01 {
+		privKeyBytes = privKeyBytes[:32]
+	}
+	if len(privKeyBytes) != 32 {
+		return nil, fmt.Errorf("invalid private key length inside WIF: expected 32, got %d", len(privKeyBytes))
+	}
+
+	return privKeyBytes, nil
+}
+
+// ripemd160Checksum returns the first 4 bytes of the RIPEMD160 hash of the input data.
+func ripemd160Checksum(data []byte) []byte {
+	h := ripemd160.New()
+	h.Write(data)
+	return h.Sum(nil)[:4]
 }

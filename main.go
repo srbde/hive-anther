@@ -1,18 +1,15 @@
 package main
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/btcsuite/btcd/btcutil"
-	"github.com/btcsuite/btcd/btcutil/base58"
-	"github.com/btcsuite/btcd/chaincfg"
-
 	"github.com/thecrazygm/anther/account"
 	"github.com/thecrazygm/anther/client"
+	"github.com/thecrazygm/anther/crypto"
 	"github.com/thecrazygm/anther/memo"
 	"github.com/thecrazygm/anther/transaction"
 )
@@ -215,17 +212,17 @@ func main() {
 
 // generateKeyPair derives a testing private WIF key and Hive-formatted STM public key
 func generateKeyPair(seed byte) (string, string) {
-	priv := [32]byte{}
+	priv := make([]byte, 32)
 	for i := range priv {
 		priv[i] = seed
 	}
-	key, _ := btcec.PrivKeyFromBytes(priv[:])
-	wif, _ := btcutil.NewWIF(key, &chaincfg.MainNetParams, false)
+	payload := append([]byte{0x80}, priv...)
+	payload = append(payload, 0x01) // Compressed WIF
+	h1 := sha256.Sum256(payload)
+	h2 := sha256.Sum256(h1[:])
+	wifBytes := append(payload, h2[:4]...)
+	wifStr := crypto.Base58Encode(wifBytes)
 
-	pubBytes := key.PubKey().SerializeCompressed()
-	checksum := btcutil.Hash160(pubBytes)
-	payload := append(pubBytes, checksum[:4]...)
-	pubKeyStr := "STM" + base58.Encode(payload)
-
-	return wif.String(), pubKeyStr
+	pubKeyStr, _ := crypto.WIFToPublicKey(wifStr)
+	return wifStr, pubKeyStr
 }
