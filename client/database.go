@@ -170,3 +170,26 @@ func (c *Client) GetKeyReferences(keys []string) ([]string, error) {
 	}
 	return result, nil
 }
+
+// VestsToHP converts a VESTS value to Hive Power (HP) based on current global properties.
+func (c *Client) VestsToHP(vests float64) (float64, error) {
+	props, err := c.GetDynamicGlobalPropertiesStruct()
+	if err != nil {
+		return 0, err
+	}
+
+	fund, err := types.ParseAmount(props.TotalVestingFundHive)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse total_vesting_fund_hive: %w", err)
+	}
+	shares, err := types.ParseAmount(props.TotalVestingShares)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse total_vesting_shares: %w", err)
+	}
+
+	if shares.Value == 0 {
+		return 0, fmt.Errorf("total_vesting_shares is zero")
+	}
+
+	return vests * (fund.Value / shares.Value), nil
+}

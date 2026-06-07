@@ -161,6 +161,8 @@ type DynamicGlobalProperties struct {
 	HeadBlockID              string `json:"head_block_id"`
 	Time                     Time   `json:"time"`
 	LastIrreversibleBlockNum uint32 `json:"last_irreversible_block_num"`
+	TotalVestingFundHive     string `json:"total_vesting_fund_hive"`
+	TotalVestingShares       string `json:"total_vesting_shares"`
 }
 
 // Manabar represents a player's voting or RC mana bar.
