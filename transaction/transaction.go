@@ -472,11 +472,19 @@ type CustomJSON struct {
 
 // ToDict returns the operation as a dictionary.
 func (cj *CustomJSON) ToDict() (string, map[string]any) {
+	requiredAuths := cj.RequiredAuths
+	if requiredAuths == nil {
+		requiredAuths = []string{}
+	}
+	requiredPostingAuths := cj.RequiredPostingAuths
+	if requiredPostingAuths == nil {
+		requiredPostingAuths = []string{}
+	}
 	return "custom_json", map[string]any{
 		"id":                     cj.ID,
 		"json":                   cj.JSON,
-		"required_auths":         cj.RequiredAuths,
-		"required_posting_auths": cj.RequiredPostingAuths,
+		"required_auths":         requiredAuths,
+		"required_posting_auths": requiredPostingAuths,
 	}
 }
 
