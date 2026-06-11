@@ -195,3 +195,53 @@ func (c *Client) GetAccountNotifications(account string, limit uint32) ([]map[st
 	}
 	return result, nil
 }
+
+// GetUnreadNotificationsCount retrieves the unread notifications count for a specific account.
+func (c *Client) GetUnreadNotificationsCount(account string) (int, error) {
+	if account == "" {
+		return 0, fmt.Errorf("account name cannot be empty")
+	}
+
+	resp, err := c.Call("bridge", "unread_notifications", map[string]any{"account": account})
+	if err != nil {
+		return 0, err
+	}
+	if resp == nil {
+		return 0, nil
+	}
+
+	resMap, ok := resp.(map[string]any)
+	if !ok {
+		return 0, fmt.Errorf("unexpected unread_notifications response type: %T", resp)
+	}
+
+	unreadVal, _ := resMap["unread"].(float64)
+	return int(unreadVal), nil
+}
+
+// GetUnreadNotifications retrieves only unread notifications for a specific account.
+// It first fetches the unread count and then limits the retrieved notifications to that count.
+func (c *Client) GetUnreadNotifications(account string, limit uint32) ([]map[string]any, error) {
+	if account == "" {
+		return nil, fmt.Errorf("account name cannot be empty")
+	}
+	if limit > 100 {
+		return nil, fmt.Errorf("limit cannot exceed 100")
+	}
+
+	unread, err := c.GetUnreadNotificationsCount(account)
+	if err != nil {
+		return nil, err
+	}
+
+	if unread <= 0 {
+		return []map[string]any{}, nil
+	}
+
+	fetchLimit := uint32(unread)
+	if fetchLimit > limit {
+		fetchLimit = limit
+	}
+
+	return c.GetAccountNotifications(account, fetchLimit)
+}

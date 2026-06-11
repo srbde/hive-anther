@@ -231,6 +231,8 @@ Package client provides a JSON\-RPC client to interact with Hive blockchain node
   - [func \(c \*Client\) Call\(api string, method string, params any\) \(any, error\)](<#Client.Call>)
   - [func \(c \*Client\) GetAccountHistory\(account string, start int64, limit uint32\) \(\[\]\*types.HistoryItem, error\)](<#Client.GetAccountHistory>)
   - [func \(c \*Client\) GetAccountNotifications\(account string, limit uint32\) \(\[\]map\[string\]any, error\)](<#Client.GetAccountNotifications>)
+  - [func \(c \*Client\) GetUnreadNotifications\(account string, limit uint32\) \(\[\]map\[string\]any, error\)](<#Client.GetUnreadNotifications>)
+  - [func \(c \*Client\) GetUnreadNotificationsCount\(account string\) \(int, error\)](<#Client.GetUnreadNotificationsCount>)
   - [func \(c \*Client\) GetAccountPosts\(sort string, account string, limit uint32, startAuthor string, startPermlink string\) \(\[\]map\[string\]any, error\)](<#Client.GetAccountPosts>)
   - [func \(c \*Client\) GetAccounts\(accounts \[\]string\) \(\[\]\*types.AccountData, error\)](<#Client.GetAccounts>)
   - [func \(c \*Client\) GetBlock\(blockNum uint32\) \(\*types.Block, error\)](<#Client.GetBlock>)
@@ -371,6 +373,24 @@ func (c *Client) GetAccountNotifications(account string, limit uint32) ([]map[st
 ```
 
 GetAccountNotifications retrieves notifications for a specific account.
+
+<a name="Client.GetUnreadNotifications"></a>
+### func \(\*Client\) GetUnreadNotifications
+
+```go
+func (c *Client) GetUnreadNotifications(account string, limit uint32) ([]map[string]any, error)
+```
+
+GetUnreadNotifications retrieves only unread notifications for a specific account.
+
+<a name="Client.GetUnreadNotificationsCount"></a>
+### func \(\*Client\) GetUnreadNotificationsCount
+
+```go
+func (c *Client) GetUnreadNotificationsCount(account string) (int, error)
+```
+
+GetUnreadNotificationsCount retrieves the unread notifications count for a specific account.
 
 <a name="Client.GetAccountPosts"></a>
 ### func \(\*Client\) GetAccountPosts

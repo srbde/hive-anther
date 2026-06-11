@@ -157,6 +157,10 @@ func TestClientExtensions(t *testing.T) {
 					"author": "bob",
 				},
 			}
+		case "bridge.unread_notifications":
+			response["result"] = map[string]any{
+				"unread": 1.0,
+			}
 		case "condenser_api.get_dynamic_global_properties":
 			response["result"] = map[string]any{
 				"head_block_number": 100.0,
@@ -355,6 +359,26 @@ func TestClientExtensions(t *testing.T) {
 
 	t.Run("GetAccountNotifications", func(t *testing.T) {
 		notifs, err := c.GetAccountNotifications("alice", 10)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(notifs) != 1 || notifs[0]["type"] != "reply" {
+			t.Fatalf("unexpected notifications: %+v", notifs)
+		}
+	})
+
+	t.Run("GetUnreadNotificationsCount", func(t *testing.T) {
+		unread, err := c.GetUnreadNotificationsCount("alice")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if unread != 1 {
+			t.Fatalf("expected 1 unread notification, got %d", unread)
+		}
+	})
+
+	t.Run("GetUnreadNotifications", func(t *testing.T) {
+		notifs, err := c.GetUnreadNotifications("alice", 10)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
