@@ -161,6 +161,27 @@ func TestClientExtensions(t *testing.T) {
 			response["result"] = map[string]any{
 				"unread": 1.0,
 			}
+		case "condenser_api.get_content_replies":
+			response["result"] = []any{
+				map[string]any{
+					"author":   "bob",
+					"permlink": "reply-permlink",
+					"body":     "This is a reply.",
+				},
+			}
+		case "bridge.get_discussion":
+			response["result"] = map[string]any{
+				"alice/test-post": map[string]any{
+					"author":   "alice",
+					"permlink": "test-post",
+					"body":     "Original post.",
+				},
+				"bob/reply-permlink": map[string]any{
+					"author":   "bob",
+					"permlink": "reply-permlink",
+					"body":     "This is a reply.",
+				},
+			}
 		case "condenser_api.get_dynamic_global_properties":
 			response["result"] = map[string]any{
 				"head_block_number": 100.0,
@@ -384,6 +405,26 @@ func TestClientExtensions(t *testing.T) {
 		}
 		if len(notifs) != 1 || notifs[0]["type"] != "reply" {
 			t.Fatalf("unexpected notifications: %+v", notifs)
+		}
+	})
+
+	t.Run("GetContentReplies", func(t *testing.T) {
+		replies, err := c.GetContentReplies("alice", "test-post")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(replies) != 1 || replies[0]["author"] != "bob" {
+			t.Fatalf("unexpected replies: %+v", replies)
+		}
+	})
+
+	t.Run("GetDiscussion", func(t *testing.T) {
+		disc, err := c.GetDiscussion("alice", "test-post")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(disc) != 2 || disc["alice/test-post"] == nil || disc["bob/reply-permlink"] == nil {
+			t.Fatalf("unexpected discussion: %+v", disc)
 		}
 	})
 

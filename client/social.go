@@ -245,3 +245,65 @@ func (c *Client) GetUnreadNotifications(account string, limit uint32) ([]map[str
 
 	return c.GetAccountNotifications(account, fetchLimit)
 }
+
+// GetContentReplies retrieves direct replies for a specific post/comment.
+func (c *Client) GetContentReplies(author string, permlink string) ([]map[string]any, error) {
+	if author == "" {
+		return nil, fmt.Errorf("author cannot be empty")
+	}
+	if permlink == "" {
+		return nil, fmt.Errorf("permlink cannot be empty")
+	}
+
+	resp, err := c.Call("condenser_api", "get_content_replies", []string{author, permlink})
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil {
+		return []map[string]any{}, nil
+	}
+
+	sliceVal, ok := resp.([]any)
+	if !ok {
+		return nil, fmt.Errorf("unexpected get_content_replies response type: %T", resp)
+	}
+
+	result := make([]map[string]any, len(sliceVal))
+	for i, v := range sliceVal {
+		m, ok := v.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("unexpected reply element type: %T", v)
+		}
+		result[i] = m
+	}
+	return result, nil
+}
+
+// GetDiscussion retrieves the full discussion thread for a post.
+func (c *Client) GetDiscussion(author string, permlink string) (map[string]any, error) {
+	if author == "" {
+		return nil, fmt.Errorf("author cannot be empty")
+	}
+	if permlink == "" {
+		return nil, fmt.Errorf("permlink cannot be empty")
+	}
+
+	params := map[string]any{
+		"author":   author,
+		"permlink": permlink,
+	}
+
+	resp, err := c.Call("bridge", "get_discussion", params)
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil {
+		return map[string]any{}, nil
+	}
+
+	resMap, ok := resp.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("unexpected get_discussion response type: %T", resp)
+	}
+	return resMap, nil
+}

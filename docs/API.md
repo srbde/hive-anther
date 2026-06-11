@@ -240,6 +240,8 @@ Package client provides a JSON\-RPC client to interact with Hive blockchain node
   - [func \(c \*Client\) GetBlockRange\(startingBlockNum uint32, count uint32\) \(\[\]\*types.Block, error\)](<#Client.GetBlockRange>)
   - [func \(c \*Client\) GetChainProperties\(\) \(\*types.ChainProperties, error\)](<#Client.GetChainProperties>)
   - [func \(c \*Client\) GetCommunity\(name string\) \(map\[string\]any, error\)](<#Client.GetCommunity>)
+  - [func \(c \*Client\) GetContentReplies\(author string, permlink string\) \(\[\]map\[string\]any, error\)](<#Client.GetContentReplies>)
+  - [func \(c \*Client\) GetDiscussion\(author string, permlink string\) \(map\[string\]any, error\)](<#Client.GetDiscussion>)
   - [func \(c \*Client\) GetConfig\(\) \(map\[string\]any, error\)](<#Client.GetConfig>)
   - [func \(c \*Client\) GetCurrentMedianHistoryPrice\(\) \(\*types.Price, error\)](<#Client.GetCurrentMedianHistoryPrice>)
   - [func \(c \*Client\) GetCurrentNode\(\) string](<#Client.GetCurrentNode>)
@@ -454,6 +456,24 @@ func (c *Client) GetCommunity(name string) (map[string]any, error)
 ```
 
 GetCommunity retrieves details about a specific community.
+
+<a name="Client.GetContentReplies"></a>
+### func \(\*Client\) GetContentReplies
+
+```go
+func (c *Client) GetContentReplies(author string, permlink string) ([]map[string]any, error)
+```
+
+GetContentReplies retrieves direct replies for a specific post/comment.
+
+<a name="Client.GetDiscussion"></a>
+### func \(\*Client\) GetDiscussion
+
+```go
+func (c *Client) GetDiscussion(author string, permlink string) (map[string]any, error)
+```
+
+GetDiscussion retrieves the full discussion thread for a post.
 
 <a name="Client.GetConfig"></a>
 ### func \(\*Client\) GetConfig
