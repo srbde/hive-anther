@@ -96,7 +96,7 @@ func main() {
 	} else {
 		rep, err := acc.Reputation()
 		if err != nil {
-			rep = 0
+			rep = 0.0
 		}
 		vp, err := acc.VotingPower()
 		if err != nil {
@@ -112,7 +112,7 @@ func main() {
 		vestingShares, _ := acc.Data["vesting_shares"].(string)
 
 		fmt.Printf("✓ Target Account:   @%s\n", acc.Name)
-		fmt.Printf("  Reputation (HAF):  %d\n", rep)
+		fmt.Printf("  Reputation (HAF):  %.2f\n", rep)
 		fmt.Printf("  HIVE Balance:      %s\n", balance)
 		fmt.Printf("  HBD Balance:       %s\n", hbdBalance)
 		fmt.Printf("  Vesting Shares:    %s\n", vestingShares)

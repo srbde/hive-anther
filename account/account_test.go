@@ -87,8 +87,8 @@ func TestGetReputationCaching(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected reputation error: %v", err)
 	}
-	if rep1 != 123 {
-		t.Fatalf("unexpected first reputation: %d", rep1)
+	if rep1 != 123.0 {
+		t.Fatalf("unexpected first reputation: %f", rep1)
 	}
 
 	rep2, err := acc.Reputation()
@@ -96,15 +96,15 @@ func TestGetReputationCaching(t *testing.T) {
 		t.Fatalf("unexpected cached reputation error: %v", err)
 	}
 	if rep2 != rep1 {
-		t.Fatalf("expected cached reputation to match initial value: %d vs %d", rep1, rep2)
+		t.Fatalf("expected cached reputation to match initial value: %f vs %f", rep1, rep2)
 	}
 
 	rep3, err := acc.GetReputation(true)
 	if err != nil {
 		t.Fatalf("unexpected refresh reputation error: %v", err)
 	}
-	if rep3 != 456 {
-		t.Fatalf("unexpected refreshed reputation: %d", rep3)
+	if rep3 != 456.0 {
+		t.Fatalf("unexpected refreshed reputation: %f", rep3)
 	}
 
 	if atomic.LoadInt32(&calls) != 2 {

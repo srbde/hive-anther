@@ -3,6 +3,7 @@ package account
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/srbde/hive-anther/client"
@@ -22,7 +23,7 @@ type Account struct {
 	Data       map[string]any
 	rcInfo     map[string]any
 	hafClient  *haf.Client
-	reputation *int64
+	reputation *float64
 }
 
 // NewAccount creates a new Account.
@@ -60,42 +61,86 @@ func (a *Account) SetHAFClient(client *haf.Client) {
 	a.hafClient = client
 }
 
-// GetReputation fetches the account reputation using the HAF API. When refresh is false and a
+// GetReputation fetches the account reputation using HAF, falling back to condenser API. When refresh is false and a
 // cached value exists it will be returned directly.
-func (a *Account) GetReputation(refresh bool) (int64, error) {
+func (a *Account) GetReputation(refresh bool) (float64, error) {
 	if a.reputation != nil && !refresh {
 		return *a.reputation, nil
 	}
 
+	// 1. Try HAF reputation using the injected Client first
 	client := a.hafClient
-	if client == nil {
-		defaultClient, err := haf.DefaultClient()
-		if err != nil {
-			return 0, err
+
+	// 2. Try HAF client with configured API node if available
+	if client == nil && a.API != nil && len(a.API.Nodes) > 0 {
+		if c, err := haf.NewClient(a.API.Nodes[0], 10*time.Second); err == nil {
+			client = c
 		}
-		client = defaultClient
 	}
 
-	result, err := client.Reputation(a.Name)
-	if err != nil {
-		return 0, err
-	}
-	if result == nil {
-		return 0, fmt.Errorf("no reputation data returned for account %s", a.Name)
+	// 3. Try default client
+	if client == nil {
+		if defaultClient, err := haf.DefaultClient(); err == nil {
+			client = defaultClient
+		}
 	}
 
-	a.reputation = &result.Reputation
-	return result.Reputation, nil
+	// Query HAF if client is available
+	if client != nil {
+		if result, err := client.Reputation(a.Name); err == nil && result != nil {
+			rep := float64(result.Reputation)
+			a.reputation = &rep
+			return rep, nil
+		}
+	}
+
+	// 4. Fallback to condenser API cached reputation
+	if len(a.Data) == 0 && a.API != nil {
+		_ = a.Refresh() // Try to refresh account data to fetch 'reputation' field
+	}
+
+	if len(a.Data) > 0 {
+		var rawRep float64
+		if repStr, ok := a.Data["reputation"].(string); ok {
+			fmt.Sscanf(repStr, "%f", &rawRep)
+		} else if repFloat, ok := a.Data["reputation"].(float64); ok {
+			rawRep = repFloat
+		}
+		if rawRep != 0 {
+			rep := calculateReputation(rawRep)
+			a.reputation = &rep
+			return rep, nil
+		}
+	}
+
+	// Fallback to default score if all else fails
+	defaultRep := 25.0
+	a.reputation = &defaultRep
+	return defaultRep, nil
 }
 
 // Reputation returns the cached reputation value or fetches it when unavailable.
-func (a *Account) Reputation() (int64, error) {
+func (a *Account) Reputation() (float64, error) {
 	return a.GetReputation(false)
 }
 
 // Rep is a shorthand alias for Reputation.
-func (a *Account) Rep() (int64, error) {
+func (a *Account) Rep() (float64, error) {
 	return a.GetReputation(false)
+}
+
+func calculateReputation(rawRep float64) float64 {
+	if rawRep == 0 {
+		return 25.0
+	}
+	sign := 1.0
+	if rawRep < 0 {
+		sign = -1.0
+		rawRep = -rawRep
+	}
+	logVal := math.Log10(rawRep)
+	rep := (logVal-9.0)*9.0 + 25.0
+	return sign * rep
 }
 
 // Follow creates a follow transaction for another account.
