@@ -307,3 +307,24 @@ func (c *Client) GetDiscussion(author string, permlink string) (map[string]any, 
 	}
 	return resMap, nil
 }
+
+// GetFollowCount retrieves the follower and following counts for an account.
+func (c *Client) GetFollowCount(account string) (map[string]any, error) {
+	if account == "" {
+		return nil, fmt.Errorf("account name cannot be empty")
+	}
+
+	resp, err := c.Call("condenser_api", "get_follow_count", []string{account})
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil {
+		return map[string]any{}, nil
+	}
+
+	resMap, ok := resp.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("unexpected get_follow_count response type: %T", resp)
+	}
+	return resMap, nil
+}

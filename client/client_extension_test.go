@@ -67,6 +67,12 @@ func TestClientExtensions(t *testing.T) {
 					"created":        "2020-01-01T00:00:00",
 				},
 			}
+		case "condenser_api.get_follow_count":
+			response["result"] = map[string]any{
+				"account":         "alice",
+				"follower_count":  100.0,
+				"following_count": 50.0,
+			}
 		case "condenser_api.get_account_history":
 			response["result"] = []any{
 				[]any{
@@ -425,6 +431,16 @@ func TestClientExtensions(t *testing.T) {
 		}
 		if len(disc) != 2 || disc["alice/test-post"] == nil || disc["bob/reply-permlink"] == nil {
 			t.Fatalf("unexpected discussion: %+v", disc)
+		}
+	})
+
+	t.Run("GetFollowCount", func(t *testing.T) {
+		fc, err := c.GetFollowCount("alice")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if fc["follower_count"].(float64) != 100.0 || fc["following_count"].(float64) != 50.0 {
+			t.Fatalf("unexpected follow count: %+v", fc)
 		}
 	})
 

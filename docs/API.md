@@ -242,6 +242,7 @@ Package client provides a JSON\-RPC client to interact with Hive blockchain node
   - [func \(c \*Client\) GetCommunity\(name string\) \(map\[string\]any, error\)](<#Client.GetCommunity>)
   - [func \(c \*Client\) GetContentReplies\(author string, permlink string\) \(\[\]map\[string\]any, error\)](<#Client.GetContentReplies>)
   - [func \(c \*Client\) GetDiscussion\(author string, permlink string\) \(map\[string\]any, error\)](<#Client.GetDiscussion>)
+  - [func \(c \*Client\) GetFollowCount\(account string\) \(map\[string\]any, error\)](<#Client.GetFollowCount>)
   - [func \(c \*Client\) GetConfig\(\) \(map\[string\]any, error\)](<#Client.GetConfig>)
   - [func \(c \*Client\) GetCurrentMedianHistoryPrice\(\) \(\*types.Price, error\)](<#Client.GetCurrentMedianHistoryPrice>)
   - [func \(c \*Client\) GetCurrentNode\(\) string](<#Client.GetCurrentNode>)
@@ -474,6 +475,15 @@ func (c *Client) GetDiscussion(author string, permlink string) (map[string]any, 
 ```
 
 GetDiscussion retrieves the full discussion thread for a post.
+
+<a name="Client.GetFollowCount"></a>
+### func \(\*Client\) GetFollowCount
+
+```go
+func (c *Client) GetFollowCount(account string) (map[string]any, error)
+```
+
+GetFollowCount retrieves the follower and following counts for an account.
 
 <a name="Client.GetConfig"></a>
 ### func \(\*Client\) GetConfig
