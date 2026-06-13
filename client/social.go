@@ -238,10 +238,7 @@ func (c *Client) GetUnreadNotifications(account string, limit uint32) ([]map[str
 		return []map[string]any{}, nil
 	}
 
-	fetchLimit := uint32(unread)
-	if fetchLimit > limit {
-		fetchLimit = limit
-	}
+	fetchLimit := min(uint32(unread), limit)
 
 	return c.GetAccountNotifications(account, fetchLimit)
 }
