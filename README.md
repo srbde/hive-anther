@@ -48,7 +48,7 @@ Anther is the Go counterpart to **[Pollen](https://github.com/srbde/hive-pollen)
 
 ## 🚀 Quick Start
 
-Requires Go >= 1.20.
+Requires Go >= 1.26.3.
 
 ```bash
 go get github.com/srbde/hive-anther
