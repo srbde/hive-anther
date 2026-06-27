@@ -4,6 +4,7 @@ package account
 import (
 	"fmt"
 	"math"
+	"strconv"
 	"time"
 
 	"github.com/srbde/hive-anther/client"
@@ -102,7 +103,9 @@ func (a *Account) GetReputation(refresh bool) (float64, error) {
 	if len(a.Data) > 0 {
 		var rawRep float64
 		if repStr, ok := a.Data["reputation"].(string); ok {
-			fmt.Sscanf(repStr, "%f", &rawRep)
+			if parsed, err := strconv.ParseFloat(repStr, 64); err == nil {
+				rawRep = parsed
+			}
 		} else if repFloat, ok := a.Data["reputation"].(float64); ok {
 			rawRep = repFloat
 		}

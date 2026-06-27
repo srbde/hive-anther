@@ -484,7 +484,7 @@ func deserializeStringArray(r *bytes.Reader) ([]string, error) {
 		return nil, err
 	}
 	result := make([]string, length)
-	for i := uint64(0); i < length; i++ {
+	for i := range length {
 		s, err := deserializeString(r)
 		if err != nil {
 			return nil, err
@@ -541,7 +541,7 @@ func TransactionFromBytes(data []byte) (*Transaction, error) {
 	}
 
 	operations := make([]Operation, opsCount)
-	for i := uint64(0); i < opsCount; i++ {
+	for i := range opsCount {
 		opID, err := deserializeVarint(r)
 		if err != nil {
 			return nil, fmt.Errorf("reading op ID: %w", err)

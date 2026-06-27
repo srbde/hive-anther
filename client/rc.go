@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/srbde/hive-anther/types"
@@ -71,14 +72,18 @@ func (c *Client) GetRCMana(account string) (*types.RCInfo, error) {
 	if maxVal, ok := rcAccount["max_rc"].(float64); ok {
 		maxRC = int64(maxVal)
 	} else if maxValStr, ok := rcAccount["max_rc"].(string); ok {
-		fmt.Sscanf(maxValStr, "%d", &maxRC)
+		if parsed, err := strconv.ParseInt(maxValStr, 10, 64); err == nil {
+			maxRC = parsed
+		}
 	}
 
 	lastMana := int64(0)
 	if lastVal, ok := manabar["current_mana"].(float64); ok {
 		lastMana = int64(lastVal)
 	} else if lastValStr, ok := manabar["current_mana"].(string); ok {
-		fmt.Sscanf(lastValStr, "%d", &lastMana)
+		if parsed, err := strconv.ParseInt(lastValStr, 10, 64); err == nil {
+			lastMana = parsed
+		}
 	}
 
 	var lastUpdateTime time.Time

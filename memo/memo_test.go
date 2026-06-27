@@ -130,7 +130,9 @@ func TestMemoEncodeDecode(t *testing.T) {
 		S := sha512.Sum512(sharedX)
 
 		buf := new(bytes.Buffer)
-		binary.Write(buf, binary.LittleEndian, nonce)
+		if err := binary.Write(buf, binary.LittleEndian, nonce); err != nil {
+			t.Fatalf("failed to write nonce to buffer: %v", err)
+		}
 		buf.Write(S[:])
 		ebuf := buf.Bytes()
 
@@ -158,8 +160,12 @@ func TestMemoEncodeDecode(t *testing.T) {
 		envelopeBuf := new(bytes.Buffer)
 		envelopeBuf.Write(senderPubBytes)
 		envelopeBuf.Write(recPubBytes)
-		binary.Write(envelopeBuf, binary.LittleEndian, nonce)
-		binary.Write(envelopeBuf, binary.LittleEndian, check32)
+		if err := binary.Write(envelopeBuf, binary.LittleEndian, nonce); err != nil {
+			t.Fatalf("failed to write nonce to envelopeBuf: %v", err)
+		}
+		if err := binary.Write(envelopeBuf, binary.LittleEndian, check32); err != nil {
+			t.Fatalf("failed to write check32 to envelopeBuf: %v", err)
+		}
 
 		varintBuf := make([]byte, binary.MaxVarintLen64)
 		n := binary.PutUvarint(varintBuf, uint64(len(ciphertext)))

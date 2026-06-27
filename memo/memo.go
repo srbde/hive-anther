@@ -11,6 +11,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
@@ -168,20 +169,30 @@ func Decode(wif string, memo string) (string, error) {
 	// Parse fields
 	reader := bytes.NewReader(decoded)
 	fromBytes := make([]byte, 33)
-	reader.Read(fromBytes)
+	if _, err := io.ReadFull(reader, fromBytes); err != nil {
+		return "", fmt.Errorf("failed to read fromBytes: %w", err)
+	}
 	toBytes := make([]byte, 33)
-	reader.Read(toBytes)
+	if _, err := io.ReadFull(reader, toBytes); err != nil {
+		return "", fmt.Errorf("failed to read toBytes: %w", err)
+	}
 	var nonce uint64
-	binary.Read(reader, binary.LittleEndian, &nonce)
+	if err := binary.Read(reader, binary.LittleEndian, &nonce); err != nil {
+		return "", fmt.Errorf("failed to read nonce: %w", err)
+	}
 	var check32 uint32
-	binary.Read(reader, binary.LittleEndian, &check32)
+	if err := binary.Read(reader, binary.LittleEndian, &check32); err != nil {
+		return "", fmt.Errorf("failed to read check32: %w", err)
+	}
 
 	cipherLen, err := binary.ReadUvarint(reader)
 	if err != nil {
 		return "", fmt.Errorf("failed to read ciphertext length: %w", err)
 	}
 	ciphertext := make([]byte, cipherLen)
-	reader.Read(ciphertext)
+	if _, err := io.ReadFull(reader, ciphertext); err != nil {
+		return "", fmt.Errorf("failed to read ciphertext: %w", err)
+	}
 
 	// Decode WIF
 	privKeyBytes, err := crypto.DecodeWIF(wif)

@@ -89,7 +89,9 @@ This document outlines the strategic roadmap for bringing **`anther`** to a feat
 To reach full v1.0.0 functionality and bring Anther to parity with Pollen and Nectar, we need to surface the remaining database, Resource Credit (RC), Hivemind, and simplified broadcast wrappers.
 
 ### 1. Database API Completeness
+
 Surface direct methods on `Client` to query secondary blockchain properties:
+
 - [ ] **`GetConfig`**: Query compiler configurations from the node.
 - [ ] **`GetChainProperties`**: Fetch current chain limits (minimum delegation fees, HBD interest rates).
 - [ ] **`GetCurrentMedianHistoryPrice`**: Retrieve the median conversion price for HIVE/HBD.
@@ -99,7 +101,9 @@ Surface direct methods on `Client` to query secondary blockchain properties:
 - [ ] **`GetBlockHeader`**: Fetch only block headers (witness, timestamp, previous) to save bandwidth.
 
 ### 2. Resource Credit (RC) Sub-API
+
 Surface Resource Credit monitoring APIs in `Client` matching Pollen's `rc` helper:
+
 - [ ] **`GetRCParams`**: Retrieve global RC cost parameters.
 - [ ] **`GetRCPool`**: Retrieve current global resource availability pools.
 - [ ] **`GetRCMana`**: Fetch a user's current Resource Credit manabar details.
@@ -108,7 +112,9 @@ Surface Resource Credit monitoring APIs in `Client` matching Pollen's `rc` helpe
   - [ ] Implement `CalculateVPMana` (compute real-time regenerated Voting Power).
 
 ### 3. Social & Content (Hivemind API)
+
 Surface methods to browse social posts, communities, and notifications matching Pollen's `hivemind` helper:
+
 - [ ] **`GetRankedPosts`**: Fetch post feeds based on rank (trending, hot, created, promoted).
 - [ ] **`GetAccountPosts`**: Fetch post feeds authored by, replied to, or voted on by a user.
 - [ ] **`GetCommunity`**: Retrieve profile details for a community.
@@ -116,7 +122,9 @@ Surface methods to browse social posts, communities, and notifications matching 
 - [ ] **`GetAccountNotifications`**: Fetch user notification feeds (mentions, reblogs, replies).
 
 ### 4. Simplified Quick Broadcast Helpers
+
 Add high-level helper functions on `Client` to sign and broadcast common operations in a single line (avoiding manual Transaction assembly):
+
 - [ ] **`client.BroadcastVote(voter, author, permlink, weight, wif)`**
 - [ ] **`client.BroadcastTransfer(from, to, amount, memo, wif)`**
 - [ ] **`client.BroadcastComment(author, permlink, parentAuthor, parentPermlink, title, body, jsonMetadata, wif)`**
