@@ -58,6 +58,10 @@ func (d dummyOp) Bytes() ([]byte, error) {
 	return []byte{0x12, 0x34}, nil
 }
 
+func (d dummyOp) FromBytes(r *bytes.Reader) error {
+	return nil
+}
+
 func generateTestWIF(t *testing.T) string {
 	t.Helper()
 	priv := make([]byte, 32)
@@ -638,5 +642,63 @@ func TestVerifyAuthority(t *testing.T) {
 	ok, err = tx3.VerifyAuthority(authMulti, crypto.HiveChainID)
 	if err != nil || ok {
 		t.Fatalf("expected multi-sig not verified, got ok=%v, err=%v", ok, err)
+	}
+}
+
+func TestTransferRoundtrip(t *testing.T) {
+	tx := NewTransaction(nil)
+	tx.RefBlockNum = 1234
+	tx.RefBlockPrefix = 56789
+	tx.Expiration = time.Unix(1735689600, 0).UTC()
+
+	tx.AppendOp(&Transfer{
+		From:   "alice",
+		To:     "bob",
+		Amount: "1.000 HIVE",
+		Memo:   "test memo",
+	})
+
+	txBytes, err := tx.Bytes()
+	if err != nil {
+		t.Fatalf("Bytes() error: %v", err)
+	}
+
+	tx2, err := TransactionFromBytes(txBytes)
+	if err != nil {
+		t.Fatalf("TransactionFromBytes() error: %v", err)
+	}
+
+	if tx2.RefBlockNum != 1234 {
+		t.Fatalf("RefBlockNum: got %d, want 1234", tx2.RefBlockNum)
+	}
+	if tx2.RefBlockPrefix != 56789 {
+		t.Fatalf("RefBlockPrefix: got %d, want 56789", tx2.RefBlockPrefix)
+	}
+	if len(tx2.Operations) != 1 {
+		t.Fatalf("Operations: got %d, want 1", len(tx2.Operations))
+	}
+
+	transfer, ok := tx2.Operations[0].(*Transfer)
+	if !ok {
+		t.Fatalf("expected *Transfer, got %T", tx2.Operations[0])
+	}
+	if transfer.From != "alice" {
+		t.Fatalf("From: got %q, want %q", transfer.From, "alice")
+	}
+	if transfer.To != "bob" {
+		t.Fatalf("To: got %q, want %q", transfer.To, "bob")
+	}
+	if transfer.Amount != "1.000 HIVE" {
+		t.Fatalf("Amount: got %q, want %q", transfer.Amount, "1.000 HIVE")
+	}
+	if transfer.Memo != "test memo" {
+		t.Fatalf("Memo: got %q, want %q", transfer.Memo, "test memo")
+	}
+
+	dict := tx2.toDict()
+	ops := dict["operations"].([]any)
+	entry := ops[0].([]any)
+	if entry[0] != "transfer" {
+		t.Fatalf("op name: got %v, want transfer", entry[0])
 	}
 }

@@ -44,6 +44,8 @@ type Transaction struct {
 type Operation interface {
 	ToDict() (string, map[string]any)
 	Bytes() ([]byte, error)
+	// FromBytes deserializes the operation from binary bytes (after op ID has been read).
+	FromBytes(r *bytes.Reader) error
 }
 
 // NewTransaction creates a new Transaction.
@@ -324,6 +326,21 @@ func (v *Vote) Bytes() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// FromBytes deserializes a Vote from binary bytes (after op ID has been read).
+func (v *Vote) FromBytes(r *bytes.Reader) error {
+	var err error
+	if v.Voter, err = deserializeString(r); err != nil {
+		return err
+	}
+	if v.Author, err = deserializeString(r); err != nil {
+		return err
+	}
+	if v.Permlink, err = deserializeString(r); err != nil {
+		return err
+	}
+	return binary.Read(r, binary.LittleEndian, &v.Weight)
+}
+
 // Transfer represents a transfer operation.
 type Transfer struct {
 	To     string
@@ -378,6 +395,26 @@ func (t *Transfer) Bytes() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// FromBytes deserializes a Transfer from binary bytes (after op ID has been read).
+func (t *Transfer) FromBytes(r *bytes.Reader) error {
+	var err error
+	if t.From, err = deserializeString(r); err != nil {
+		return err
+	}
+	if t.To, err = deserializeString(r); err != nil {
+		return err
+	}
+	amt, err := types.AmountFromBytes(r)
+	if err != nil {
+		return err
+	}
+	t.Amount = amt.String()
+	if t.Memo, err = deserializeString(r); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Helper function to serialize a string with varint length prefix
 func serializeString(buf *bytes.Buffer, s string) error {
 	strBytes := []byte(s)
@@ -404,6 +441,128 @@ func serializeStringArray(buf *bytes.Buffer, arr []string) error {
 		}
 	}
 	return nil
+}
+
+// deserializeVarint reads a LEB128 varint from the reader.
+func deserializeVarint(r *bytes.Reader) (uint64, error) {
+	var result uint64
+	var shift uint
+	for {
+		b, err := r.ReadByte()
+		if err != nil {
+			return 0, fmt.Errorf("reading varint: %w", err)
+		}
+		result |= uint64(b&0x7f) << shift
+		if b&0x80 == 0 {
+			break
+		}
+		shift += 7
+		if shift >= 64 {
+			return 0, fmt.Errorf("varint too long")
+		}
+	}
+	return result, nil
+}
+
+// deserializeString reads a varint-length-prefixed string from the reader.
+func deserializeString(r *bytes.Reader) (string, error) {
+	length, err := deserializeVarint(r)
+	if err != nil {
+		return "", err
+	}
+	buf := make([]byte, length)
+	if _, err := r.Read(buf); err != nil {
+		return "", fmt.Errorf("reading string: %w", err)
+	}
+	return string(buf), nil
+}
+
+// deserializeStringArray reads a varint-length-prefixed array of strings.
+func deserializeStringArray(r *bytes.Reader) ([]string, error) {
+	length, err := deserializeVarint(r)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]string, length)
+	for i := uint64(0); i < length; i++ {
+		s, err := deserializeString(r)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = s
+	}
+	return result, nil
+}
+
+// deserializeOp reads an operation from the reader based on its op ID.
+func deserializeOp(opID uint64, r *bytes.Reader) (Operation, error) {
+	var op Operation
+	switch opID {
+	case 0:
+		op = &Vote{}
+	case 1:
+		op = &Comment{}
+	case 2:
+		op = &Transfer{}
+	case 18:
+		op = &CustomJSON{}
+	default:
+		return nil, fmt.Errorf("unsupported operation ID: %d", opID)
+	}
+	if err := op.FromBytes(r); err != nil {
+		return nil, err
+	}
+	return op, nil
+}
+
+// TransactionFromBytes deserializes a Transaction from binary bytes.
+func TransactionFromBytes(data []byte) (*Transaction, error) {
+	r := bytes.NewReader(data)
+
+	var refBlockNum uint16
+	if err := binary.Read(r, binary.LittleEndian, &refBlockNum); err != nil {
+		return nil, fmt.Errorf("reading ref_block_num: %w", err)
+	}
+
+	var refBlockPrefix uint32
+	if err := binary.Read(r, binary.LittleEndian, &refBlockPrefix); err != nil {
+		return nil, fmt.Errorf("reading ref_block_prefix: %w", err)
+	}
+
+	var expSeconds uint32
+	if err := binary.Read(r, binary.LittleEndian, &expSeconds); err != nil {
+		return nil, fmt.Errorf("reading expiration: %w", err)
+	}
+	expiration := time.Unix(int64(expSeconds), 0)
+
+	opsCount, err := deserializeVarint(r)
+	if err != nil {
+		return nil, fmt.Errorf("reading ops count: %w", err)
+	}
+
+	operations := make([]Operation, opsCount)
+	for i := uint64(0); i < opsCount; i++ {
+		opID, err := deserializeVarint(r)
+		if err != nil {
+			return nil, fmt.Errorf("reading op ID: %w", err)
+		}
+		op, err := deserializeOp(opID, r)
+		if err != nil {
+			return nil, fmt.Errorf("reading operation %d: %w", i, err)
+		}
+		operations[i] = op
+	}
+
+	// Read extensions count (usually 0)
+	_, _ = deserializeVarint(r)
+
+	return &Transaction{
+		RefBlockNum:    refBlockNum,
+		RefBlockPrefix: refBlockPrefix,
+		Expiration:     expiration,
+		Operations:     operations,
+		Signatures:     []string{},
+	}, nil
 }
 
 // Comment represents a comment (post) operation.
@@ -462,6 +621,33 @@ func (c *Comment) Bytes() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// FromBytes deserializes a Comment from binary bytes (after op ID has been read).
+func (c *Comment) FromBytes(r *bytes.Reader) error {
+	var err error
+	if c.ParentAuthor, err = deserializeString(r); err != nil {
+		return err
+	}
+	if c.ParentPermlink, err = deserializeString(r); err != nil {
+		return err
+	}
+	if c.Author, err = deserializeString(r); err != nil {
+		return err
+	}
+	if c.Permlink, err = deserializeString(r); err != nil {
+		return err
+	}
+	if c.Title, err = deserializeString(r); err != nil {
+		return err
+	}
+	if c.Body, err = deserializeString(r); err != nil {
+		return err
+	}
+	if c.JSONMetadata, err = deserializeString(r); err != nil {
+		return err
+	}
+	return nil
+}
+
 // CustomJSON represents a custom JSON operation.
 type CustomJSON struct {
 	ID                   string
@@ -511,6 +697,24 @@ func (cj *CustomJSON) Bytes() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// FromBytes deserializes a CustomJSON from binary bytes (after op ID has been read).
+func (cj *CustomJSON) FromBytes(r *bytes.Reader) error {
+	var err error
+	if cj.RequiredAuths, err = deserializeStringArray(r); err != nil {
+		return err
+	}
+	if cj.RequiredPostingAuths, err = deserializeStringArray(r); err != nil {
+		return err
+	}
+	if cj.ID, err = deserializeString(r); err != nil {
+		return err
+	}
+	if cj.JSON, err = deserializeString(r); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Follow represents a follow operation via custom JSON.
 type Follow struct {
 	Follower  string
@@ -556,4 +760,39 @@ func (f *Follow) Bytes() ([]byte, error) {
 		RequiredPostingAuths: []string{f.Follower},
 	}
 	return cj.Bytes()
+}
+
+// FromBytes deserializes a Follow from binary bytes (after op ID has been read).
+// Follow is a CustomJSON wrapper, so this delegates to CustomJSON deserialization.
+func (f *Follow) FromBytes(r *bytes.Reader) error {
+	cj := &CustomJSON{}
+	if err := cj.FromBytes(r); err != nil {
+		return err
+	}
+	if cj.ID != "follow" {
+		return fmt.Errorf("expected follow custom JSON, got %s", cj.ID)
+	}
+	f.Follower = cj.RequiredPostingAuths[0]
+	var parsed []any
+	if err := json.Unmarshal([]byte(cj.JSON), &parsed); err != nil {
+		return err
+	}
+	if len(parsed) >= 2 {
+		if body, ok := parsed[1].(map[string]any); ok {
+			if v, ok := body["follower"].(string); ok {
+				f.Follower = v
+			}
+			if v, ok := body["following"].(string); ok {
+				f.Following = v
+			}
+			if v, ok := body["what"].([]any); ok {
+				for _, item := range v {
+					if s, ok := item.(string); ok {
+						f.What = append(f.What, s)
+					}
+				}
+			}
+		}
+	}
+	return nil
 }

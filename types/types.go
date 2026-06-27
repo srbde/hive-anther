@@ -65,6 +65,12 @@ var WireSymbolAliases = map[string]string{
 	"HBD":  "SBD",
 }
 
+// DisplaySymbolAliases maps wire symbols back to display symbols
+var DisplaySymbolAliases = map[string]string{
+	"STEEM": "HIVE",
+	"SBD":   "HBD",
+}
+
 // Asset metadata for serialization
 var AssetMetadata = map[string]map[string]any{
 	"HIVE":  {"precision": int64(3)},
@@ -153,6 +159,37 @@ func parseFloat(s string) (float64, error) {
 	var f float64
 	_, err := fmt.Sscanf(s, "%f", &f)
 	return f, err
+}
+
+// AmountFromBytes deserializes an Amount from binary wire format.
+// Format: int64 LE (satoshis) + uint8 (precision) + 7 bytes (symbol, null-padded).
+func AmountFromBytes(r *bytes.Reader) (*Amount, error) {
+	var satoshis int64
+	if err := binary.Read(r, binary.LittleEndian, &satoshis); err != nil {
+		return nil, fmt.Errorf("reading satoshis: %w", err)
+	}
+
+	var precision uint8
+	if err := binary.Read(r, binary.LittleEndian, &precision); err != nil {
+		return nil, fmt.Errorf("reading precision: %w", err)
+	}
+
+	symbolBuf := make([]byte, 7)
+	if _, err := r.Read(symbolBuf); err != nil {
+		return nil, fmt.Errorf("reading symbol: %w", err)
+	}
+
+	wireSymbol := strings.TrimRight(string(symbolBuf), "\x00")
+	displaySymbol := wireSymbol
+	if alias, ok := DisplaySymbolAliases[wireSymbol]; ok {
+		displaySymbol = alias
+	}
+
+	value := float64(satoshis) / math.Pow(10, float64(precision))
+	return &Amount{
+		Value:  value,
+		Symbol: displaySymbol,
+	}, nil
 }
 
 // DynamicGlobalProperties represents the dynamic global properties of the Hive blockchain.
