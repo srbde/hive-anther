@@ -211,6 +211,11 @@ func (co *CommentOptions) Bytes() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// FromBytes deserializes CommentOptions from binary bytes.
+func (co *CommentOptions) FromBytes(r *bytes.Reader) error {
+	return fmt.Errorf("CommentOptions deserialization not implemented")
+}
+
 // DeleteComment represents a delete_comment operation.
 type DeleteComment struct {
 	Author   string `json:"author"`
@@ -237,6 +242,11 @@ func (dc *DeleteComment) Bytes() ([]byte, error) {
 		return nil, err
 	}
 	return buf.Bytes(), nil
+}
+
+// FromBytes deserializes DeleteComment from binary bytes.
+func (dc *DeleteComment) FromBytes(r *bytes.Reader) error {
+	return fmt.Errorf("DeleteComment deserialization not implemented")
 }
 
 // TransferToVesting represents a transfer_to_vesting operation.
@@ -280,6 +290,11 @@ func (tv *TransferToVesting) Bytes() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// FromBytes deserializes TransferToVesting from binary bytes.
+func (tv *TransferToVesting) FromBytes(r *bytes.Reader) error {
+	return fmt.Errorf("TransferToVesting deserialization not implemented")
+}
+
 // WithdrawVesting represents a withdraw_vesting operation.
 type WithdrawVesting struct {
 	Account       string `json:"account"`
@@ -314,6 +329,11 @@ func (wv *WithdrawVesting) Bytes() ([]byte, error) {
 	buf.Write(amtBytes)
 
 	return buf.Bytes(), nil
+}
+
+// FromBytes deserializes WithdrawVesting from binary bytes.
+func (wv *WithdrawVesting) FromBytes(r *bytes.Reader) error {
+	return fmt.Errorf("WithdrawVesting deserialization not implemented")
 }
 
 // DelegateVestingShares represents a delegate_vesting_shares operation.
@@ -355,6 +375,11 @@ func (dvs *DelegateVestingShares) Bytes() ([]byte, error) {
 	buf.Write(amtBytes)
 
 	return buf.Bytes(), nil
+}
+
+// FromBytes deserializes DelegateVestingShares from binary bytes.
+func (dvs *DelegateVestingShares) FromBytes(r *bytes.Reader) error {
+	return fmt.Errorf("DelegateVestingShares deserialization not implemented")
 }
 
 // ClaimRewardBalance represents a claim_reward_balance operation.
@@ -415,6 +440,11 @@ func (crb *ClaimRewardBalance) Bytes() ([]byte, error) {
 	buf.Write(amtVestsBytes)
 
 	return buf.Bytes(), nil
+}
+
+// FromBytes deserializes ClaimRewardBalance from binary bytes.
+func (crb *ClaimRewardBalance) FromBytes(r *bytes.Reader) error {
+	return fmt.Errorf("ClaimRewardBalance deserialization not implemented")
 }
 
 // RecurrentTransfer represents a recurrent_transfer operation.
@@ -480,6 +510,11 @@ func (rt *RecurrentTransfer) Bytes() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// FromBytes deserializes RecurrentTransfer from binary bytes.
+func (rt *RecurrentTransfer) FromBytes(r *bytes.Reader) error {
+	return fmt.Errorf("RecurrentTransfer deserialization not implemented")
+}
+
 // ClaimAccount represents a claim_account operation.
 type ClaimAccount struct {
 	Creator string `json:"creator"`
@@ -518,6 +553,11 @@ func (ca *ClaimAccount) Bytes() ([]byte, error) {
 	buf.WriteByte(0)
 
 	return buf.Bytes(), nil
+}
+
+// FromBytes deserializes ClaimAccount from binary bytes.
+func (ca *ClaimAccount) FromBytes(r *bytes.Reader) error {
+	return fmt.Errorf("ClaimAccount deserialization not implemented")
 }
 
 // CreateClaimedAccount represents a create_claimed_account operation.
@@ -579,6 +619,11 @@ func (cca *CreateClaimedAccount) Bytes() ([]byte, error) {
 	buf.WriteByte(0)
 
 	return buf.Bytes(), nil
+}
+
+// FromBytes deserializes CreateClaimedAccount from binary bytes.
+func (cca *CreateClaimedAccount) FromBytes(r *bytes.Reader) error {
+	return fmt.Errorf("CreateClaimedAccount deserialization not implemented")
 }
 
 // AccountUpdate represents an account_update operation.
@@ -658,4 +703,9 @@ func (au *AccountUpdate) Bytes() ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+// FromBytes deserializes AccountUpdate from binary bytes.
+func (au *AccountUpdate) FromBytes(r *bytes.Reader) error {
+	return fmt.Errorf("AccountUpdate deserialization not implemented")
 }
