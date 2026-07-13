@@ -65,6 +65,30 @@ func TestClientExtensions(t *testing.T) {
 					"hbd_balance":    "50.000 HBD",
 					"vesting_shares": "10000.000000 VESTS",
 					"created":        "2020-01-01T00:00:00",
+					"owner": map[string]any{
+						"weight_threshold": 1.0,
+						"account_auths":    []any{},
+						"key_auths": []any{
+							[]any{"STM5ownerkey1111111111111111111111111111111111111111", 1.0},
+						},
+					},
+					"active": map[string]any{
+						"weight_threshold": 2.0,
+						"account_auths": []any{
+							[]any{"bob", 1.0},
+						},
+						"key_auths": []any{
+							[]any{"STM5activekey111111111111111111111111111111111111111", 2.0},
+						},
+					},
+					"posting": map[string]any{
+						"weight_threshold": 1.0,
+						"account_auths":    []any{},
+						"key_auths": []any{
+							[]any{"STM5postingkey11111111111111111111111111111111111111", 1.0},
+						},
+					},
+					"memo_key": "STM5memokey1111111111111111111111111111111111111111111",
 				},
 			}
 		case "condenser_api.get_follow_count":
@@ -251,6 +275,20 @@ func TestClientExtensions(t *testing.T) {
 		}
 		if len(accounts) != 1 || accounts[0].Name != "alice" {
 			t.Fatalf("unexpected accounts data: %+v", accounts)
+		}
+
+		acc := accounts[0]
+		if acc.MemoKey != "STM5memokey1111111111111111111111111111111111111111111" {
+			t.Fatalf("unexpected memo key: %s", acc.MemoKey)
+		}
+		if acc.Owner.WeightThreshold != 1 || acc.Owner.KeyAuths["STM5ownerkey1111111111111111111111111111111111111111"] != 1 {
+			t.Fatalf("unexpected owner authority: %+v", acc.Owner)
+		}
+		if acc.Active.WeightThreshold != 2 || acc.Active.AccountAuths["bob"] != 1 {
+			t.Fatalf("unexpected active authority: %+v", acc.Active)
+		}
+		if acc.Posting.WeightThreshold != 1 || len(acc.Posting.KeyAuths) != 1 {
+			t.Fatalf("unexpected posting authority: %+v", acc.Posting)
 		}
 	})
 

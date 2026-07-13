@@ -11,11 +11,9 @@ import (
 )
 
 // Authority represents a cryptographic voting or transaction threshold authority.
-type Authority struct {
-	WeightThreshold uint32            `json:"weight_threshold"`
-	AccountAuths    map[string]uint16 `json:"account_auths"`
-	KeyAuths        map[string]uint16 `json:"key_auths"`
-}
+// It is an alias for types.Authority, which also handles Hive's JSON wire format for the
+// read side (e.g. types.AccountData's owner/active/posting fields).
+type Authority = types.Authority
 
 // Helper function to serialize an Authority
 func serializeAuthority(buf *bytes.Buffer, auth *Authority) error {
