@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -369,6 +370,83 @@ func TestGetBlockRange(t *testing.T) {
 
 	// Test count > 1000 validation
 	if _, err := c.GetBlockRange(100, 1001); err == nil || err.Error() != "block range count cannot exceed 1000" {
+		t.Fatalf("expected error for count > 1000, got: %v", err)
+	}
+}
+
+func TestGetOpsInBlockRange(t *testing.T) {
+	var concurrentCalls, maxConcurrentCalls int64
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cur := atomic.AddInt64(&concurrentCalls, 1)
+		defer atomic.AddInt64(&concurrentCalls, -1)
+		for {
+			maxSoFar := atomic.LoadInt64(&maxConcurrentCalls)
+			if cur <= maxSoFar || atomic.CompareAndSwapInt64(&maxConcurrentCalls, maxSoFar, cur) {
+				break
+			}
+		}
+
+		var payload map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		method := payload["method"].(string)
+		response := map[string]any{"jsonrpc": "2.0", "id": payload["id"]}
+
+		if method == "condenser_api.get_ops_in_block" {
+			params := payload["params"].([]any)
+			blockNum := int(params[0].(float64))
+			response["result"] = []any{
+				map[string]any{
+					"trx_id":       fmt.Sprintf("trx-%d", blockNum),
+					"block":        blockNum,
+					"trx_in_block": 0,
+					"op_in_trx":    0,
+					"virtual_op":   false,
+					"op":           []any{"vote", map[string]any{"voter": "alice"}},
+				},
+			}
+		} else {
+			response["error"] = map[string]any{"message": "unknown method"}
+		}
+
+		_ = json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	c := NewClient([]string{server.URL}, 30)
+
+	ops, err := c.GetOpsInBlockRange(100, 50)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(ops) != 50 {
+		t.Fatalf("expected 50 ops, got %d", len(ops))
+	}
+	for i, op := range ops {
+		expectedBlock := uint32(100 + i)
+		if op.Block != expectedBlock {
+			t.Fatalf("expected ops in block order, got op[%d].Block = %d, want %d", i, op.Block, expectedBlock)
+		}
+	}
+
+	if atomic.LoadInt64(&maxConcurrentCalls) <= 1 {
+		t.Fatalf("expected concurrent calls, max observed concurrency was %d", maxConcurrentCalls)
+	}
+	if atomic.LoadInt64(&maxConcurrentCalls) > opsInBlockRangeConcurrency {
+		t.Fatalf("exceeded concurrency cap: max observed concurrency was %d", maxConcurrentCalls)
+	}
+
+	// Test count = 0 validation
+	if _, err := c.GetOpsInBlockRange(100, 0); err == nil || err.Error() != "block range count must be greater than 0" {
+		t.Fatalf("expected error for count = 0, got: %v", err)
+	}
+
+	// Test count > 1000 validation
+	if _, err := c.GetOpsInBlockRange(100, 1001); err == nil || err.Error() != "block range count cannot exceed 1000" {
 		t.Fatalf("expected error for count > 1000, got: %v", err)
 	}
 }
