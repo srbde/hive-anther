@@ -131,6 +131,96 @@ func TestOperationTupleUnmarshal(t *testing.T) {
 	})
 }
 
+func TestOperationTupleCustomJSONID(t *testing.T) {
+	t.Run("matching custom_json", func(t *testing.T) {
+		jsonData := `["custom_json", {"id": "hiveidentity", "json": "{}", "required_posting_auths": ["alice"]}]`
+		var ot OperationTuple
+		if err := json.Unmarshal([]byte(jsonData), &ot); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		id, ok := ot.CustomJSONID()
+		if !ok || id != "hiveidentity" {
+			t.Fatalf("expected id %q, got %q (ok=%v)", "hiveidentity", id, ok)
+		}
+	})
+
+	t.Run("non custom_json op", func(t *testing.T) {
+		jsonData := `["transfer", {"from": "alice", "to": "bob", "amount": "1.000 HIVE"}]`
+		var ot OperationTuple
+		if err := json.Unmarshal([]byte(jsonData), &ot); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if _, ok := ot.CustomJSONID(); ok {
+			t.Fatalf("expected ok=false for non custom_json op")
+		}
+	})
+
+	t.Run("missing id field", func(t *testing.T) {
+		jsonData := `["custom_json", {"json": "{}"}]`
+		var ot OperationTuple
+		if err := json.Unmarshal([]byte(jsonData), &ot); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if _, ok := ot.CustomJSONID(); ok {
+			t.Fatalf("expected ok=false for missing id field")
+		}
+	})
+}
+
+func TestAuthorityJSON(t *testing.T) {
+	t.Run("unmarshal tuple-array wire format", func(t *testing.T) {
+		jsonData := `{
+			"weight_threshold": 2,
+			"account_auths": [["bob", 1]],
+			"key_auths": [["STM5key1111111111111111111111111111111111111111111111", 2]]
+		}`
+		var a Authority
+		if err := json.Unmarshal([]byte(jsonData), &a); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if a.WeightThreshold != 2 {
+			t.Fatalf("expected weight_threshold 2, got %d", a.WeightThreshold)
+		}
+		if a.AccountAuths["bob"] != 1 {
+			t.Fatalf("unexpected account_auths: %+v", a.AccountAuths)
+		}
+		if a.KeyAuths["STM5key1111111111111111111111111111111111111111111111"] != 2 {
+			t.Fatalf("unexpected key_auths: %+v", a.KeyAuths)
+		}
+	})
+
+	t.Run("round trip through marshal", func(t *testing.T) {
+		original := Authority{
+			WeightThreshold: 3,
+			AccountAuths:    map[string]uint16{"bob": 1, "carol": 2},
+			KeyAuths:        map[string]uint16{"STM5keyone": 1},
+		}
+		data, err := json.Marshal(original)
+		if err != nil {
+			t.Fatalf("unexpected marshal error: %v", err)
+		}
+
+		var roundTripped Authority
+		if err := json.Unmarshal(data, &roundTripped); err != nil {
+			t.Fatalf("unexpected unmarshal error: %v", err)
+		}
+
+		if roundTripped.WeightThreshold != original.WeightThreshold {
+			t.Fatalf("weight_threshold mismatch: %+v", roundTripped)
+		}
+		for k, v := range original.AccountAuths {
+			if roundTripped.AccountAuths[k] != v {
+				t.Fatalf("account_auths mismatch: %+v", roundTripped.AccountAuths)
+			}
+		}
+		for k, v := range original.KeyAuths {
+			if roundTripped.KeyAuths[k] != v {
+				t.Fatalf("key_auths mismatch: %+v", roundTripped.KeyAuths)
+			}
+		}
+	})
+}
+
 func TestTimeUnmarshal(t *testing.T) {
 	t.Run("valid datetime", func(t *testing.T) {
 		jsonData := `"2026-05-24T23:17:09"`

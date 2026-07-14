@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 	"time"
 )
@@ -239,14 +240,96 @@ func (m *Manabar) UnmarshalJSON(data []byte) error {
 
 // AccountData represents Hive account query results.
 type AccountData struct {
-	Name          string  `json:"name"`
-	VotingPower   float64 `json:"voting_power"`
-	VotingManabar Manabar `json:"voting_manabar"`
-	LastVoteTime  Time    `json:"last_vote_time"`
-	Balance       string  `json:"balance"`
-	HbdBalance    string  `json:"hbd_balance"`
-	VestingShares string  `json:"vesting_shares"`
-	Created       Time    `json:"created"`
+	Name          string    `json:"name"`
+	VotingPower   float64   `json:"voting_power"`
+	VotingManabar Manabar   `json:"voting_manabar"`
+	LastVoteTime  Time      `json:"last_vote_time"`
+	Balance       string    `json:"balance"`
+	HbdBalance    string    `json:"hbd_balance"`
+	VestingShares string    `json:"vesting_shares"`
+	Created       Time      `json:"created"`
+	Owner         Authority `json:"owner"`
+	Active        Authority `json:"active"`
+	Posting       Authority `json:"posting"`
+	MemoKey       string    `json:"memo_key"`
+}
+
+// Authority represents Hive's weighted-key/account voting threshold model, used both for
+// interpreting an account's owner/active/posting authorities (read side) and for building
+// operations that set them, such as account_update (write side, see the transaction package).
+type Authority struct {
+	WeightThreshold uint32
+	AccountAuths    map[string]uint16
+	KeyAuths        map[string]uint16
+}
+
+// authorityWire mirrors Hive's actual JSON wire format for an Authority, where account_auths
+// and key_auths are arrays of [name-or-key, weight] tuples rather than JSON objects.
+type authorityWire struct {
+	WeightThreshold uint32   `json:"weight_threshold"`
+	AccountAuths    [][2]any `json:"account_auths"`
+	KeyAuths        [][2]any `json:"key_auths"`
+}
+
+func tuplesToWeightMap(tuples [][2]any) (map[string]uint16, error) {
+	m := make(map[string]uint16, len(tuples))
+	for _, t := range tuples {
+		key, ok := t[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("unexpected authority tuple key type: %T", t[0])
+		}
+		weight, ok := t[1].(float64)
+		if !ok {
+			return nil, fmt.Errorf("unexpected authority tuple weight type: %T", t[1])
+		}
+		m[key] = uint16(weight)
+	}
+	return m, nil
+}
+
+func weightMapToTuples(m map[string]uint16) [][2]any {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	tuples := make([][2]any, 0, len(m))
+	for _, k := range keys {
+		tuples = append(tuples, [2]any{k, m[k]})
+	}
+	return tuples
+}
+
+// UnmarshalJSON customizes unmarshaling for Authority to parse Hive's tuple-array wire format
+// for account_auths/key_auths into weight maps.
+func (a *Authority) UnmarshalJSON(data []byte) error {
+	var w authorityWire
+	if err := json.Unmarshal(data, &w); err != nil {
+		return err
+	}
+	accountAuths, err := tuplesToWeightMap(w.AccountAuths)
+	if err != nil {
+		return fmt.Errorf("failed to parse account_auths: %w", err)
+	}
+	keyAuths, err := tuplesToWeightMap(w.KeyAuths)
+	if err != nil {
+		return fmt.Errorf("failed to parse key_auths: %w", err)
+	}
+	a.WeightThreshold = w.WeightThreshold
+	a.AccountAuths = accountAuths
+	a.KeyAuths = keyAuths
+	return nil
+}
+
+// MarshalJSON customizes marshaling for Authority to emit Hive's tuple-array wire format for
+// account_auths/key_auths instead of the default JSON object encoding of a Go map.
+func (a Authority) MarshalJSON() ([]byte, error) {
+	return json.Marshal(authorityWire{
+		WeightThreshold: a.WeightThreshold,
+		AccountAuths:    weightMapToTuples(a.AccountAuths),
+		KeyAuths:        weightMapToTuples(a.KeyAuths),
+	})
 }
 
 // RCInfo represents a player's Resource Credit information.
@@ -292,6 +375,25 @@ func (ot *OperationTuple) UnmarshalJSON(data []byte) error {
 	}
 
 	return fmt.Errorf("failed to unmarshal OperationTuple: invalid format")
+}
+
+// CustomJSONID returns the id field of a custom_json operation tuple, if this tuple represents
+// a custom_json operation with a string id. The second return value is false for any other
+// operation type or if the id field is missing/non-string.
+func (ot OperationTuple) CustomJSONID() (string, bool) {
+	if len(ot) != 2 {
+		return "", false
+	}
+	opType, ok := ot[0].(string)
+	if !ok || opType != "custom_json" {
+		return "", false
+	}
+	data, ok := ot[1].(map[string]any)
+	if !ok {
+		return "", false
+	}
+	id, ok := data["id"].(string)
+	return id, ok
 }
 
 // TransactionInBlock represents a transaction inside a block.
