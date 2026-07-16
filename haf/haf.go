@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -139,9 +140,17 @@ func (c *Client) request(endpoint string) (any, error) {
 		return nil, fmt.Errorf("haf client is nil")
 	}
 
-	url := fmt.Sprintf("%s/%s", c.baseURL, strings.TrimLeft(endpoint, "/"))
+	urlStr := fmt.Sprintf("%s/%s", c.baseURL, strings.TrimLeft(endpoint, "/"))
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	parsedURL, err := url.Parse(urlStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid request URL %q: %w", urlStr, err)
+	}
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		return nil, fmt.Errorf("invalid request URL scheme %q, must be http or https", parsedURL.Scheme)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, parsedURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
