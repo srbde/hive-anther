@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 
@@ -114,7 +115,15 @@ func (c *Client) Call(api string, method string, params any) (any, error) {
 				return nil, err
 			}
 
-			req, err := http.NewRequest("POST", nodeURL, bytes.NewBuffer(jsonPayload))
+			parsedURL, err := url.Parse(nodeURL)
+			if err != nil {
+				return nil, fmt.Errorf("invalid node URL %q: %w", nodeURL, err)
+			}
+			if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+				return nil, fmt.Errorf("invalid node URL scheme %q, must be http or https", parsedURL.Scheme)
+			}
+
+			req, err := http.NewRequest("POST", parsedURL.String(), bytes.NewBuffer(jsonPayload))
 			if err != nil {
 				return nil, err
 			}
