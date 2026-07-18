@@ -25,14 +25,14 @@ Package account manages Hive account profiles, reputations, voting power, Resour
   - [func NewAccount\(name string, api \*client.Client\) \*Account](<#NewAccount>)
   - [func \(a \*Account\) Follow\(accountToFollow string\) \(\*transaction.Transaction, error\)](<#Account.Follow>)
   - [func \(a \*Account\) GetRCInfo\(refresh bool\) \(map\[string\]any, error\)](<#Account.GetRCInfo>)
-  - [func \(a \*Account\) GetReputation\(refresh bool\) \(int64, error\)](<#Account.GetReputation>)
+  - [func \(a \*Account\) GetReputation\(refresh bool\) \(float64, error\)](<#Account.GetReputation>)
   - [func \(a \*Account\) GetVotingPower\(refresh bool\) \(float64, error\)](<#Account.GetVotingPower>)
   - [func \(a \*Account\) Ignore\(accountToIgnore string\) \(\*transaction.Transaction, error\)](<#Account.Ignore>)
   - [func \(a \*Account\) RC\(\) \(float64, error\)](<#Account.RC>)
   - [func \(a \*Account\) RCInfo\(\) \(map\[string\]any, error\)](<#Account.RCInfo>)
   - [func \(a \*Account\) Refresh\(\) error](<#Account.Refresh>)
-  - [func \(a \*Account\) Rep\(\) \(int64, error\)](<#Account.Rep>)
-  - [func \(a \*Account\) Reputation\(\) \(int64, error\)](<#Account.Reputation>)
+  - [func \(a \*Account\) Rep\(\) \(float64, error\)](<#Account.Rep>)
+  - [func \(a \*Account\) Reputation\(\) \(float64, error\)](<#Account.Reputation>)
   - [func \(a \*Account\) SetHAFClient\(client \*haf.Client\)](<#Account.SetHAFClient>)
   - [func \(a \*Account\) Unfollow\(accountToUnfollow string\) \(\*transaction.Transaction, error\)](<#Account.Unfollow>)
   - [func \(a \*Account\) Unignore\(accountToUnignore string\) \(\*transaction.Transaction, error\)](<#Account.Unignore>)
@@ -52,7 +52,7 @@ const (
 ```
 
 <a name="Account"></a>
-## type Account
+## type [Account](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L21-L28>)
 
 Account represents a Hive account.
 
@@ -66,7 +66,7 @@ type Account struct {
 ```
 
 <a name="NewAccount"></a>
-### func NewAccount
+### func [NewAccount](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L31>)
 
 ```go
 func NewAccount(name string, api *client.Client) *Account
@@ -75,7 +75,7 @@ func NewAccount(name string, api *client.Client) *Account
 NewAccount creates a new Account.
 
 <a name="Account.Follow"></a>
-### func \(\*Account\) Follow
+### func \(\*Account\) [Follow](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L150>)
 
 ```go
 func (a *Account) Follow(accountToFollow string) (*transaction.Transaction, error)
@@ -84,7 +84,7 @@ func (a *Account) Follow(accountToFollow string) (*transaction.Transaction, erro
 Follow creates a follow transaction for another account.
 
 <a name="Account.GetRCInfo"></a>
-### func \(\*Account\) GetRCInfo
+### func \(\*Account\) [GetRCInfo](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L277>)
 
 ```go
 func (a *Account) GetRCInfo(refresh bool) (map[string]any, error)
@@ -93,16 +93,16 @@ func (a *Account) GetRCInfo(refresh bool) (map[string]any, error)
 GetRCInfo fetches and caches Resource Credit information.
 
 <a name="Account.GetReputation"></a>
-### func \(\*Account\) GetReputation
+### func \(\*Account\) [GetReputation](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L67>)
 
 ```go
-func (a *Account) GetReputation(refresh bool) (int64, error)
+func (a *Account) GetReputation(refresh bool) (float64, error)
 ```
 
-GetReputation fetches the account reputation using the HAF API. When refresh is false and a cached value exists it will be returned directly.
+GetReputation fetches the account reputation using HAF, falling back to condenser API. When refresh is false and a cached value exists it will be returned directly.
 
 <a name="Account.GetVotingPower"></a>
-### func \(\*Account\) GetVotingPower
+### func \(\*Account\) [GetVotingPower](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L203>)
 
 ```go
 func (a *Account) GetVotingPower(refresh bool) (float64, error)
@@ -111,7 +111,7 @@ func (a *Account) GetVotingPower(refresh bool) (float64, error)
 GetVotingPower calculates the current voting power percentage.
 
 <a name="Account.Ignore"></a>
-### func \(\*Account\) Ignore
+### func \(\*Account\) [Ignore](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L182>)
 
 ```go
 func (a *Account) Ignore(accountToIgnore string) (*transaction.Transaction, error)
@@ -120,7 +120,7 @@ func (a *Account) Ignore(accountToIgnore string) (*transaction.Transaction, erro
 Ignore creates an ignore/mute transaction for another account.
 
 <a name="Account.RC"></a>
-### func \(\*Account\) RC
+### func \(\*Account\) [RC](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L367>)
 
 ```go
 func (a *Account) RC() (float64, error)
@@ -129,7 +129,7 @@ func (a *Account) RC() (float64, error)
 RC returns the current RC percentage.
 
 <a name="Account.RCInfo"></a>
-### func \(\*Account\) RCInfo
+### func \(\*Account\) [RCInfo](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L362>)
 
 ```go
 func (a *Account) RCInfo() (map[string]any, error)
@@ -138,7 +138,7 @@ func (a *Account) RCInfo() (map[string]any, error)
 RCInfo returns the RC info property.
 
 <a name="Account.Refresh"></a>
-### func \(\*Account\) Refresh
+### func \(\*Account\) [Refresh](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L40>)
 
 ```go
 func (a *Account) Refresh() error
@@ -147,25 +147,25 @@ func (a *Account) Refresh() error
 Refresh fetches the account data from the blockchain.
 
 <a name="Account.Rep"></a>
-### func \(\*Account\) Rep
+### func \(\*Account\) [Rep](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L131>)
 
 ```go
-func (a *Account) Rep() (int64, error)
+func (a *Account) Rep() (float64, error)
 ```
 
 Rep is a shorthand alias for Reputation.
 
 <a name="Account.Reputation"></a>
-### func \(\*Account\) Reputation
+### func \(\*Account\) [Reputation](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L126>)
 
 ```go
-func (a *Account) Reputation() (int64, error)
+func (a *Account) Reputation() (float64, error)
 ```
 
 Reputation returns the cached reputation value or fetches it when unavailable.
 
 <a name="Account.SetHAFClient"></a>
-### func \(\*Account\) SetHAFClient
+### func \(\*Account\) [SetHAFClient](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L61>)
 
 ```go
 func (a *Account) SetHAFClient(client *haf.Client)
@@ -174,7 +174,7 @@ func (a *Account) SetHAFClient(client *haf.Client)
 SetHAFClient allows injecting a custom HAF client for reputation and balance lookups.
 
 <a name="Account.Unfollow"></a>
-### func \(\*Account\) Unfollow
+### func \(\*Account\) [Unfollow](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L166>)
 
 ```go
 func (a *Account) Unfollow(accountToUnfollow string) (*transaction.Transaction, error)
@@ -183,7 +183,7 @@ func (a *Account) Unfollow(accountToUnfollow string) (*transaction.Transaction, 
 Unfollow creates an unfollow transaction for an account.
 
 <a name="Account.Unignore"></a>
-### func \(\*Account\) Unignore
+### func \(\*Account\) [Unignore](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L198>)
 
 ```go
 func (a *Account) Unignore(accountToUnignore string) (*transaction.Transaction, error)
@@ -192,7 +192,7 @@ func (a *Account) Unignore(accountToUnignore string) (*transaction.Transaction, 
 Unignore creates an unignore transaction \(same as unfollow\).
 
 <a name="Account.VP"></a>
-### func \(\*Account\) VP
+### func \(\*Account\) [VP](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L272>)
 
 ```go
 func (a *Account) VP() (float64, error)
@@ -201,7 +201,7 @@ func (a *Account) VP() (float64, error)
 VP returns the current voting power percentage \(shorthand\).
 
 <a name="Account.VotingPower"></a>
-### func \(\*Account\) VotingPower
+### func \(\*Account\) [VotingPower](<https://github.com/srbde/hive-anther/blob/main/account/account.go#L267>)
 
 ```go
 func (a *Account) VotingPower() (float64, error)
@@ -231,8 +231,6 @@ Package client provides a JSON\-RPC client to interact with Hive blockchain node
   - [func \(c \*Client\) Call\(api string, method string, params any\) \(any, error\)](<#Client.Call>)
   - [func \(c \*Client\) GetAccountHistory\(account string, start int64, limit uint32\) \(\[\]\*types.HistoryItem, error\)](<#Client.GetAccountHistory>)
   - [func \(c \*Client\) GetAccountNotifications\(account string, limit uint32\) \(\[\]map\[string\]any, error\)](<#Client.GetAccountNotifications>)
-  - [func \(c \*Client\) GetUnreadNotifications\(account string, limit uint32\) \(\[\]map\[string\]any, error\)](<#Client.GetUnreadNotifications>)
-  - [func \(c \*Client\) GetUnreadNotificationsCount\(account string\) \(int, error\)](<#Client.GetUnreadNotificationsCount>)
   - [func \(c \*Client\) GetAccountPosts\(sort string, account string, limit uint32, startAuthor string, startPermlink string\) \(\[\]map\[string\]any, error\)](<#Client.GetAccountPosts>)
   - [func \(c \*Client\) GetAccounts\(accounts \[\]string\) \(\[\]\*types.AccountData, error\)](<#Client.GetAccounts>)
   - [func \(c \*Client\) GetBlock\(blockNum uint32\) \(\*types.Block, error\)](<#Client.GetBlock>)
@@ -240,32 +238,36 @@ Package client provides a JSON\-RPC client to interact with Hive blockchain node
   - [func \(c \*Client\) GetBlockRange\(startingBlockNum uint32, count uint32\) \(\[\]\*types.Block, error\)](<#Client.GetBlockRange>)
   - [func \(c \*Client\) GetChainProperties\(\) \(\*types.ChainProperties, error\)](<#Client.GetChainProperties>)
   - [func \(c \*Client\) GetCommunity\(name string\) \(map\[string\]any, error\)](<#Client.GetCommunity>)
-  - [func \(c \*Client\) GetContentReplies\(author string, permlink string\) \(\[\]map\[string\]any, error\)](<#Client.GetContentReplies>)
-  - [func \(c \*Client\) GetDiscussion\(author string, permlink string\) \(map\[string\]any, error\)](<#Client.GetDiscussion>)
-  - [func \(c \*Client\) GetFollowCount\(account string\) \(map\[string\]any, error\)](<#Client.GetFollowCount>)
   - [func \(c \*Client\) GetConfig\(\) \(map\[string\]any, error\)](<#Client.GetConfig>)
+  - [func \(c \*Client\) GetContentReplies\(author string, permlink string\) \(\[\]map\[string\]any, error\)](<#Client.GetContentReplies>)
   - [func \(c \*Client\) GetCurrentMedianHistoryPrice\(\) \(\*types.Price, error\)](<#Client.GetCurrentMedianHistoryPrice>)
   - [func \(c \*Client\) GetCurrentNode\(\) string](<#Client.GetCurrentNode>)
+  - [func \(c \*Client\) GetDiscussion\(author string, permlink string\) \(map\[string\]any, error\)](<#Client.GetDiscussion>)
   - [func \(c \*Client\) GetDynamicGlobalProperties\(\) \(map\[string\]any, error\)](<#Client.GetDynamicGlobalProperties>)
   - [func \(c \*Client\) GetDynamicGlobalPropertiesStruct\(\) \(\*types.DynamicGlobalProperties, error\)](<#Client.GetDynamicGlobalPropertiesStruct>)
+  - [func \(c \*Client\) GetFollowCount\(account string\) \(map\[string\]any, error\)](<#Client.GetFollowCount>)
   - [func \(c \*Client\) GetKeyReferences\(keys \[\]string\) \(\[\]string, error\)](<#Client.GetKeyReferences>)
   - [func \(c \*Client\) GetNextNode\(\) string](<#Client.GetNextNode>)
   - [func \(c \*Client\) GetOpsInBlock\(blockNum uint32, onlyVirtual bool\) \(\[\]\*types.AppliedOperation, error\)](<#Client.GetOpsInBlock>)
+  - [func \(c \*Client\) GetOpsInBlockRange\(startingBlockNum uint32, count uint32\) \(\[\]\*types.AppliedOperation, error\)](<#Client.GetOpsInBlockRange>)
   - [func \(c \*Client\) GetRCMana\(account string\) \(\*types.RCInfo, error\)](<#Client.GetRCMana>)
   - [func \(c \*Client\) GetRCParams\(\) \(map\[string\]any, error\)](<#Client.GetRCParams>)
   - [func \(c \*Client\) GetRCPool\(\) \(map\[string\]any, error\)](<#Client.GetRCPool>)
   - [func \(c \*Client\) GetRankedPosts\(sort string, startAuthor string, startPermlink string, limit uint32, tag string\) \(\[\]map\[string\]any, error\)](<#Client.GetRankedPosts>)
   - [func \(c \*Client\) GetTransaction\(trxID string\) \(any, error\)](<#Client.GetTransaction>)
+  - [func \(c \*Client\) GetUnreadNotifications\(account string, limit uint32\) \(\[\]map\[string\]any, error\)](<#Client.GetUnreadNotifications>)
+  - [func \(c \*Client\) GetUnreadNotificationsCount\(account string\) \(int, error\)](<#Client.GetUnreadNotificationsCount>)
   - [func \(c \*Client\) GetVestingDelegations\(delegator string, start string, limit uint32\) \(\[\]\*types.VestingDelegation, error\)](<#Client.GetVestingDelegations>)
   - [func \(c \*Client\) ListCommunities\(last string, limit uint32, query string\) \(\[\]map\[string\]any, error\)](<#Client.ListCommunities>)
   - [func \(c \*Client\) RotateNode\(\) string](<#Client.RotateNode>)
   - [func \(c \*Client\) StreamBlocks\(ctx context.Context, startBlock uint32, mode StreamingMode\) \(\<\-chan \*types.Block, \<\-chan error\)](<#Client.StreamBlocks>)
   - [func \(c \*Client\) StreamOperations\(ctx context.Context, startBlock uint32, mode StreamingMode, filter \[\]string\) \(\<\-chan \*types.AppliedOperation, \<\-chan error\)](<#Client.StreamOperations>)
+  - [func \(c \*Client\) VestsToHP\(vests float64\) \(float64, error\)](<#Client.VestsToHP>)
 - [type StreamingMode](<#StreamingMode>)
 
 
 <a name="Client"></a>
-## type Client
+## type [Client](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L20-L26>)
 
 Client is a JSON\-RPC client for interacting with Hive nodes.
 
@@ -279,7 +281,7 @@ type Client struct {
 ```
 
 <a name="NewClient"></a>
-### func NewClient
+### func [NewClient](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L29>)
 
 ```go
 func NewClient(nodes []string, timeout int) *Client
@@ -288,7 +290,7 @@ func NewClient(nodes []string, timeout int) *Client
 NewClient creates a new Client.
 
 <a name="Client.BroadcastComment"></a>
-### func \(\*Client\) BroadcastComment
+### func \(\*Client\) [BroadcastComment](<https://github.com/srbde/hive-anther/blob/main/client/broadcast.go#L38>)
 
 ```go
 func (c *Client) BroadcastComment(author, permlink, parentAuthor, parentPermlink, title, body, jsonMetadata string, wif string) (any, error)
@@ -297,7 +299,7 @@ func (c *Client) BroadcastComment(author, permlink, parentAuthor, parentPermlink
 BroadcastComment creates, signs, and broadcasts a comment \(post or reply\) transaction.
 
 <a name="Client.BroadcastCustomJSON"></a>
-### func \(\*Client\) BroadcastCustomJSON
+### func \(\*Client\) [BroadcastCustomJSON](<https://github.com/srbde/hive-anther/blob/main/client/broadcast.go#L56>)
 
 ```go
 func (c *Client) BroadcastCustomJSON(id, jsonString string, requiredPostingAuths []string, wif string) (any, error)
@@ -306,7 +308,7 @@ func (c *Client) BroadcastCustomJSON(id, jsonString string, requiredPostingAuths
 BroadcastCustomJSON creates, signs, and broadcasts a custom JSON transaction using posting authority.
 
 <a name="Client.BroadcastTransfer"></a>
-### func \(\*Client\) BroadcastTransfer
+### func \(\*Client\) [BroadcastTransfer](<https://github.com/srbde/hive-anther/blob/main/client/broadcast.go#L23>)
 
 ```go
 func (c *Client) BroadcastTransfer(from, to, amount, memo string, wif string) (any, error)
@@ -315,7 +317,7 @@ func (c *Client) BroadcastTransfer(from, to, amount, memo string, wif string) (a
 BroadcastTransfer creates, signs, and broadcasts a transfer transaction.
 
 <a name="Client.BroadcastVote"></a>
-### func \(\*Client\) BroadcastVote
+### func \(\*Client\) [BroadcastVote](<https://github.com/srbde/hive-anther/blob/main/client/broadcast.go#L8>)
 
 ```go
 func (c *Client) BroadcastVote(voter, author, permlink string, weight int16, wif string) (any, error)
@@ -324,7 +326,7 @@ func (c *Client) BroadcastVote(voter, author, permlink string, weight int16, wif
 BroadcastVote creates, signs, and broadcasts a vote transaction.
 
 <a name="Client.BuildPayload"></a>
-### func \(\*Client\) BuildPayload
+### func \(\*Client\) [BuildPayload](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L81>)
 
 ```go
 func (c *Client) BuildPayload(api string, method string, params any) (map[string]any, error)
@@ -333,7 +335,7 @@ func (c *Client) BuildPayload(api string, method string, params any) (map[string
 BuildPayload builds the JSON\-RPC payload.
 
 <a name="Client.CalculateRCMana"></a>
-### func \(\*Client\) CalculateRCMana
+### func \(\*Client\) [CalculateRCMana](<https://github.com/srbde/hive-anther/blob/main/client/rc.go#L122>)
 
 ```go
 func (c *Client) CalculateRCMana(accountData *types.AccountData) float64
@@ -342,7 +344,7 @@ func (c *Client) CalculateRCMana(accountData *types.AccountData) float64
 CalculateRCMana queries and calculates the current Resource Credit percentage.
 
 <a name="Client.CalculateVPMana"></a>
-### func \(\*Client\) CalculateVPMana
+### func \(\*Client\) [CalculateVPMana](<https://github.com/srbde/hive-anther/blob/main/client/rc.go#L134>)
 
 ```go
 func (c *Client) CalculateVPMana(accountData *types.AccountData) float64
@@ -351,7 +353,7 @@ func (c *Client) CalculateVPMana(accountData *types.AccountData) float64
 CalculateVPMana calculates the real\-time Voting Power percentage of an account.
 
 <a name="Client.Call"></a>
-### func \(\*Client\) Call
+### func \(\*Client\) [Call](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L101>)
 
 ```go
 func (c *Client) Call(api string, method string, params any) (any, error)
@@ -360,7 +362,7 @@ func (c *Client) Call(api string, method string, params any) (any, error)
 Call makes a JSON\-RPC call to a Hive node with sticky node failover and exponential backoff retries.
 
 <a name="Client.GetAccountHistory"></a>
-### func \(\*Client\) GetAccountHistory
+### func \(\*Client\) [GetAccountHistory](<https://github.com/srbde/hive-anther/blob/main/client/database.go#L83>)
 
 ```go
 func (c *Client) GetAccountHistory(account string, start int64, limit uint32) ([]*types.HistoryItem, error)
@@ -369,7 +371,7 @@ func (c *Client) GetAccountHistory(account string, start int64, limit uint32) ([
 GetAccountHistory fetches the operation history of an account. The limit parameter cannot exceed 1000.
 
 <a name="Client.GetAccountNotifications"></a>
-### func \(\*Client\) GetAccountNotifications
+### func \(\*Client\) [GetAccountNotifications](<https://github.com/srbde/hive-anther/blob/main/client/social.go#L162>)
 
 ```go
 func (c *Client) GetAccountNotifications(account string, limit uint32) ([]map[string]any, error)
@@ -377,26 +379,8 @@ func (c *Client) GetAccountNotifications(account string, limit uint32) ([]map[st
 
 GetAccountNotifications retrieves notifications for a specific account.
 
-<a name="Client.GetUnreadNotifications"></a>
-### func \(\*Client\) GetUnreadNotifications
-
-```go
-func (c *Client) GetUnreadNotifications(account string, limit uint32) ([]map[string]any, error)
-```
-
-GetUnreadNotifications retrieves only unread notifications for a specific account.
-
-<a name="Client.GetUnreadNotificationsCount"></a>
-### func \(\*Client\) GetUnreadNotificationsCount
-
-```go
-func (c *Client) GetUnreadNotificationsCount(account string) (int, error)
-```
-
-GetUnreadNotificationsCount retrieves the unread notifications count for a specific account.
-
 <a name="Client.GetAccountPosts"></a>
-### func \(\*Client\) GetAccountPosts
+### func \(\*Client\) [GetAccountPosts](<https://github.com/srbde/hive-anther/blob/main/client/social.go#L52>)
 
 ```go
 func (c *Client) GetAccountPosts(sort string, account string, limit uint32, startAuthor string, startPermlink string) ([]map[string]any, error)
@@ -405,7 +389,7 @@ func (c *Client) GetAccountPosts(sort string, account string, limit uint32, star
 GetAccountPosts retrieves posts created by or associated with a specific account.
 
 <a name="Client.GetAccounts"></a>
-### func \(\*Client\) GetAccounts
+### func \(\*Client\) [GetAccounts](<https://github.com/srbde/hive-anther/blob/main/client/database.go#L62>)
 
 ```go
 func (c *Client) GetAccounts(accounts []string) ([]*types.AccountData, error)
@@ -414,7 +398,7 @@ func (c *Client) GetAccounts(accounts []string) ([]*types.AccountData, error)
 GetAccounts fetches details for a list of account names.
 
 <a name="Client.GetBlock"></a>
-### func \(\*Client\) GetBlock
+### func \(\*Client\) [GetBlock](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L250>)
 
 ```go
 func (c *Client) GetBlock(blockNum uint32) (*types.Block, error)
@@ -423,7 +407,7 @@ func (c *Client) GetBlock(blockNum uint32) (*types.Block, error)
 GetBlock fetches a signed block by number.
 
 <a name="Client.GetBlockHeader"></a>
-### func \(\*Client\) GetBlockHeader
+### func \(\*Client\) [GetBlockHeader](<https://github.com/srbde/hive-anther/blob/main/client/database.go#L130>)
 
 ```go
 func (c *Client) GetBlockHeader(blockNum uint32) (*types.BlockHeader, error)
@@ -432,7 +416,7 @@ func (c *Client) GetBlockHeader(blockNum uint32) (*types.BlockHeader, error)
 GetBlockHeader returns the block header for a specific block.
 
 <a name="Client.GetBlockRange"></a>
-### func \(\*Client\) GetBlockRange
+### func \(\*Client\) [GetBlockRange](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L270>)
 
 ```go
 func (c *Client) GetBlockRange(startingBlockNum uint32, count uint32) ([]*types.Block, error)
@@ -441,7 +425,7 @@ func (c *Client) GetBlockRange(startingBlockNum uint32, count uint32) ([]*types.
 GetBlockRange fetches a range of blocks starting from startingBlockNum.
 
 <a name="Client.GetChainProperties"></a>
-### func \(\*Client\) GetChainProperties
+### func \(\*Client\) [GetChainProperties](<https://github.com/srbde/hive-anther/blob/main/client/database.go#L28>)
 
 ```go
 func (c *Client) GetChainProperties() (*types.ChainProperties, error)
@@ -450,7 +434,7 @@ func (c *Client) GetChainProperties() (*types.ChainProperties, error)
 GetChainProperties returns the current chain properties.
 
 <a name="Client.GetCommunity"></a>
-### func \(\*Client\) GetCommunity
+### func \(\*Client\) [GetCommunity](<https://github.com/srbde/hive-anther/blob/main/client/social.go#L97>)
 
 ```go
 func (c *Client) GetCommunity(name string) (map[string]any, error)
@@ -458,35 +442,8 @@ func (c *Client) GetCommunity(name string) (map[string]any, error)
 
 GetCommunity retrieves details about a specific community.
 
-<a name="Client.GetContentReplies"></a>
-### func \(\*Client\) GetContentReplies
-
-```go
-func (c *Client) GetContentReplies(author string, permlink string) ([]map[string]any, error)
-```
-
-GetContentReplies retrieves direct replies for a specific post/comment.
-
-<a name="Client.GetDiscussion"></a>
-### func \(\*Client\) GetDiscussion
-
-```go
-func (c *Client) GetDiscussion(author string, permlink string) (map[string]any, error)
-```
-
-GetDiscussion retrieves the full discussion thread for a post.
-
-<a name="Client.GetFollowCount"></a>
-### func \(\*Client\) GetFollowCount
-
-```go
-func (c *Client) GetFollowCount(account string) (map[string]any, error)
-```
-
-GetFollowCount retrieves the follower and following counts for an account.
-
 <a name="Client.GetConfig"></a>
-### func \(\*Client\) GetConfig
+### func \(\*Client\) [GetConfig](<https://github.com/srbde/hive-anther/blob/main/client/database.go#L11>)
 
 ```go
 func (c *Client) GetConfig() (map[string]any, error)
@@ -494,8 +451,17 @@ func (c *Client) GetConfig() (map[string]any, error)
 
 GetConfig returns the node's configuration map.
 
+<a name="Client.GetContentReplies"></a>
+### func \(\*Client\) [GetContentReplies](<https://github.com/srbde/hive-anther/blob/main/client/social.go#L247>)
+
+```go
+func (c *Client) GetContentReplies(author string, permlink string) ([]map[string]any, error)
+```
+
+GetContentReplies retrieves direct replies for a specific post/comment.
+
 <a name="Client.GetCurrentMedianHistoryPrice"></a>
-### func \(\*Client\) GetCurrentMedianHistoryPrice
+### func \(\*Client\) [GetCurrentMedianHistoryPrice](<https://github.com/srbde/hive-anther/blob/main/client/database.go#L45>)
 
 ```go
 func (c *Client) GetCurrentMedianHistoryPrice() (*types.Price, error)
@@ -504,7 +470,7 @@ func (c *Client) GetCurrentMedianHistoryPrice() (*types.Price, error)
 GetCurrentMedianHistoryPrice returns the current median history price for HIVE/HBD.
 
 <a name="Client.GetCurrentNode"></a>
-### func \(\*Client\) GetCurrentNode
+### func \(\*Client\) [GetCurrentNode](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L53>)
 
 ```go
 func (c *Client) GetCurrentNode() string
@@ -512,8 +478,17 @@ func (c *Client) GetCurrentNode() string
 
 GetCurrentNode returns the currently selected node URL. If no node has been selected yet, it selects the first one.
 
+<a name="Client.GetDiscussion"></a>
+### func \(\*Client\) [GetDiscussion](<https://github.com/srbde/hive-anther/blob/main/client/social.go#L280>)
+
+```go
+func (c *Client) GetDiscussion(author string, permlink string) (map[string]any, error)
+```
+
+GetDiscussion retrieves the full discussion thread for a post.
+
 <a name="Client.GetDynamicGlobalProperties"></a>
-### func \(\*Client\) GetDynamicGlobalProperties
+### func \(\*Client\) [GetDynamicGlobalProperties](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L211>)
 
 ```go
 func (c *Client) GetDynamicGlobalProperties() (map[string]any, error)
@@ -522,7 +497,7 @@ func (c *Client) GetDynamicGlobalProperties() (map[string]any, error)
 GetDynamicGlobalProperties gets the dynamic global properties of the Hive blockchain.
 
 <a name="Client.GetDynamicGlobalPropertiesStruct"></a>
-### func \(\*Client\) GetDynamicGlobalPropertiesStruct
+### func \(\*Client\) [GetDynamicGlobalPropertiesStruct](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L228>)
 
 ```go
 func (c *Client) GetDynamicGlobalPropertiesStruct() (*types.DynamicGlobalProperties, error)
@@ -530,8 +505,17 @@ func (c *Client) GetDynamicGlobalPropertiesStruct() (*types.DynamicGlobalPropert
 
 GetDynamicGlobalPropertiesStruct fetches the dynamic global properties of the Hive blockchain as a typed struct.
 
+<a name="Client.GetFollowCount"></a>
+### func \(\*Client\) [GetFollowCount](<https://github.com/srbde/hive-anther/blob/main/client/social.go#L309>)
+
+```go
+func (c *Client) GetFollowCount(account string) (map[string]any, error)
+```
+
+GetFollowCount retrieves the follower and following counts for an account.
+
 <a name="Client.GetKeyReferences"></a>
-### func \(\*Client\) GetKeyReferences
+### func \(\*Client\) [GetKeyReferences](<https://github.com/srbde/hive-anther/blob/main/client/database.go#L150>)
 
 ```go
 func (c *Client) GetKeyReferences(keys []string) ([]string, error)
@@ -540,7 +524,7 @@ func (c *Client) GetKeyReferences(keys []string) ([]string, error)
 GetKeyReferences returns the account names associated with the given public keys.
 
 <a name="Client.GetNextNode"></a>
-### func \(\*Client\) GetNextNode
+### func \(\*Client\) [GetNextNode](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L41>)
 
 ```go
 func (c *Client) GetNextNode() string
@@ -549,7 +533,7 @@ func (c *Client) GetNextNode() string
 GetNextNode gets the next available node from the list \(legacy round\-robin helper\).
 
 <a name="Client.GetOpsInBlock"></a>
-### func \(\*Client\) GetOpsInBlock
+### func \(\*Client\) [GetOpsInBlock](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L314>)
 
 ```go
 func (c *Client) GetOpsInBlock(blockNum uint32, onlyVirtual bool) ([]*types.AppliedOperation, error)
@@ -557,8 +541,17 @@ func (c *Client) GetOpsInBlock(blockNum uint32, onlyVirtual bool) ([]*types.Appl
 
 GetOpsInBlock fetches applied operations in a block.
 
+<a name="Client.GetOpsInBlockRange"></a>
+### func \(\*Client\) [GetOpsInBlockRange](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L340>)
+
+```go
+func (c *Client) GetOpsInBlockRange(startingBlockNum uint32, count uint32) ([]*types.AppliedOperation, error)
+```
+
+GetOpsInBlockRange fetches applied operations for a range of blocks starting at startingBlockNum, up to count blocks \(same 1000\-block ceiling as GetBlockRange\). Blocks are fetched concurrently \(bounded by opsInBlockRangeConcurrency\) rather than one at a time, which meaningfully cuts wall\-clock time when catching up a large backlog. Results preserve block order regardless of completion order.
+
 <a name="Client.GetRCMana"></a>
-### func \(\*Client\) GetRCMana
+### func \(\*Client\) [GetRCMana](<https://github.com/srbde/hive-anther/blob/main/client/rc.go#L38>)
 
 ```go
 func (c *Client) GetRCMana(account string) (*types.RCInfo, error)
@@ -567,7 +560,7 @@ func (c *Client) GetRCMana(account string) (*types.RCInfo, error)
 GetRCMana retrieves and calculates Resource Credit details for a specific account.
 
 <a name="Client.GetRCParams"></a>
-### func \(\*Client\) GetRCParams
+### func \(\*Client\) [GetRCParams](<https://github.com/srbde/hive-anther/blob/main/client/rc.go#L12>)
 
 ```go
 func (c *Client) GetRCParams() (map[string]any, error)
@@ -576,7 +569,7 @@ func (c *Client) GetRCParams() (map[string]any, error)
 GetRCParams fetches the Resource Credit resource parameters.
 
 <a name="Client.GetRCPool"></a>
-### func \(\*Client\) GetRCPool
+### func \(\*Client\) [GetRCPool](<https://github.com/srbde/hive-anther/blob/main/client/rc.go#L25>)
 
 ```go
 func (c *Client) GetRCPool() (map[string]any, error)
@@ -585,7 +578,7 @@ func (c *Client) GetRCPool() (map[string]any, error)
 GetRCPool fetches the Resource Credit resource pool.
 
 <a name="Client.GetRankedPosts"></a>
-### func \(\*Client\) GetRankedPosts
+### func \(\*Client\) [GetRankedPosts](<https://github.com/srbde/hive-anther/blob/main/client/social.go#L8>)
 
 ```go
 func (c *Client) GetRankedPosts(sort string, startAuthor string, startPermlink string, limit uint32, tag string) ([]map[string]any, error)
@@ -594,7 +587,7 @@ func (c *Client) GetRankedPosts(sort string, startAuthor string, startPermlink s
 GetRankedPosts retrieves ranked posts from the Hivemind bridge API.
 
 <a name="Client.GetTransaction"></a>
-### func \(\*Client\) GetTransaction
+### func \(\*Client\) [GetTransaction](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L245>)
 
 ```go
 func (c *Client) GetTransaction(trxID string) (any, error)
@@ -602,8 +595,26 @@ func (c *Client) GetTransaction(trxID string) (any, error)
 
 GetTransaction fetches a transaction by its transaction ID.
 
+<a name="Client.GetUnreadNotifications"></a>
+### func \(\*Client\) [GetUnreadNotifications](<https://github.com/srbde/hive-anther/blob/main/client/social.go#L224>)
+
+```go
+func (c *Client) GetUnreadNotifications(account string, limit uint32) ([]map[string]any, error)
+```
+
+GetUnreadNotifications retrieves only unread notifications for a specific account. It first fetches the unread count and then limits the retrieved notifications to that count.
+
+<a name="Client.GetUnreadNotificationsCount"></a>
+### func \(\*Client\) [GetUnreadNotificationsCount](<https://github.com/srbde/hive-anther/blob/main/client/social.go#L200>)
+
+```go
+func (c *Client) GetUnreadNotificationsCount(account string) (int, error)
+```
+
+GetUnreadNotificationsCount retrieves the unread notifications count for a specific account.
+
 <a name="Client.GetVestingDelegations"></a>
-### func \(\*Client\) GetVestingDelegations
+### func \(\*Client\) [GetVestingDelegations](<https://github.com/srbde/hive-anther/blob/main/client/database.go#L107>)
 
 ```go
 func (c *Client) GetVestingDelegations(delegator string, start string, limit uint32) ([]*types.VestingDelegation, error)
@@ -612,7 +623,7 @@ func (c *Client) GetVestingDelegations(delegator string, start string, limit uin
 GetVestingDelegations returns active vesting delegations for an account. The limit parameter cannot exceed 1000.
 
 <a name="Client.ListCommunities"></a>
-### func \(\*Client\) ListCommunities
+### func \(\*Client\) [ListCommunities](<https://github.com/srbde/hive-anther/blob/main/client/social.go#L122>)
 
 ```go
 func (c *Client) ListCommunities(last string, limit uint32, query string) ([]map[string]any, error)
@@ -621,7 +632,7 @@ func (c *Client) ListCommunities(last string, limit uint32, query string) ([]map
 ListCommunities retrieves a list of communities.
 
 <a name="Client.RotateNode"></a>
-### func \(\*Client\) RotateNode
+### func \(\*Client\) [RotateNode](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L66>)
 
 ```go
 func (c *Client) RotateNode() string
@@ -630,7 +641,7 @@ func (c *Client) RotateNode() string
 RotateNode advances the client to the next node in the list and returns it.
 
 <a name="Client.StreamBlocks"></a>
-### func \(\*Client\) StreamBlocks
+### func \(\*Client\) [StreamBlocks](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L376>)
 
 ```go
 func (c *Client) StreamBlocks(ctx context.Context, startBlock uint32, mode StreamingMode) (<-chan *types.Block, <-chan error)
@@ -639,7 +650,7 @@ func (c *Client) StreamBlocks(ctx context.Context, startBlock uint32, mode Strea
 StreamBlocks streams blocks starting from startBlock \(or latest/irreversible if 0\) indefinitely.
 
 <a name="Client.StreamOperations"></a>
-### func \(\*Client\) StreamOperations
+### func \(\*Client\) [StreamOperations](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L472>)
 
 ```go
 func (c *Client) StreamOperations(ctx context.Context, startBlock uint32, mode StreamingMode, filter []string) (<-chan *types.AppliedOperation, <-chan error)
@@ -647,8 +658,17 @@ func (c *Client) StreamOperations(ctx context.Context, startBlock uint32, mode S
 
 StreamOperations streams applied operations starting from startBlock \(or latest/irreversible if 0\), filtered by operation type.
 
+<a name="Client.VestsToHP"></a>
+### func \(\*Client\) [VestsToHP](<https://github.com/srbde/hive-anther/blob/main/client/database.go#L175>)
+
+```go
+func (c *Client) VestsToHP(vests float64) (float64, error)
+```
+
+VestsToHP converts a VESTS value to Hive Power \(HP\) based on current global properties.
+
 <a name="StreamingMode"></a>
-## type StreamingMode
+## type [StreamingMode](<https://github.com/srbde/hive-anther/blob/main/client/client.go#L220>)
 
 StreamingMode controls whether head block or last irreversible block is followed
 
@@ -694,7 +714,7 @@ const HiveChainID = "beeab0de000000000000000000000000000000000000000000000000000
 ```
 
 <a name="Base58Decode"></a>
-## func Base58Decode
+## func [Base58Decode](<https://github.com/srbde/hive-anther/blob/main/crypto/base58.go#L37>)
 
 ```go
 func Base58Decode(input string) []byte
@@ -703,7 +723,7 @@ func Base58Decode(input string) []byte
 Base58Decode decodes a Base58 string into a byte slice.
 
 <a name="Base58Encode"></a>
-## func Base58Encode
+## func [Base58Encode](<https://github.com/srbde/hive-anther/blob/main/crypto/base58.go#L11>)
 
 ```go
 func Base58Encode(input []byte) string
@@ -712,7 +732,7 @@ func Base58Encode(input []byte) string
 Base58Encode encodes a byte slice into a Base58 string.
 
 <a name="DecodeWIF"></a>
-## func DecodeWIF
+## func [DecodeWIF](<https://github.com/srbde/hive-anther/blob/main/crypto/signature.go#L196>)
 
 ```go
 func DecodeWIF(wif string) ([]byte, error)
@@ -721,7 +741,7 @@ func DecodeWIF(wif string) ([]byte, error)
 DecodeWIF decodes a private key in WIF format and returns the raw 32\-byte private key.
 
 <a name="RecoverKeyFromSignature"></a>
-## func RecoverKeyFromSignature
+## func [RecoverKeyFromSignature](<https://github.com/srbde/hive-anther/blob/main/crypto/signature.go#L150>)
 
 ```go
 func RecoverKeyFromSignature(signatureHex string, digest []byte) (string, error)
@@ -730,7 +750,7 @@ func RecoverKeyFromSignature(signatureHex string, digest []byte) (string, error)
 RecoverKeyFromSignature recovers the Hive public key string from a 65\-byte hex\-encoded signature and a 32\-byte message digest.
 
 <a name="SignTransactionBytes"></a>
-## func SignTransactionBytes
+## func [SignTransactionBytes](<https://github.com/srbde/hive-anther/blob/main/crypto/signature.go#L20>)
 
 ```go
 func SignTransactionBytes(txBytes []byte, wif string) (string, error)
@@ -739,7 +759,7 @@ func SignTransactionBytes(txBytes []byte, wif string) (string, error)
 SignTransactionBytes signs transaction bytes with a private WIF key and the default chain ID.
 
 <a name="SignTransactionBytesWithChainID"></a>
-## func SignTransactionBytesWithChainID
+## func [SignTransactionBytesWithChainID](<https://github.com/srbde/hive-anther/blob/main/crypto/signature.go#L25>)
 
 ```go
 func SignTransactionBytesWithChainID(txBytes []byte, wif string, chainID string) (string, error)
@@ -748,7 +768,7 @@ func SignTransactionBytesWithChainID(txBytes []byte, wif string, chainID string)
 SignTransactionBytesWithChainID signs transaction bytes with a private WIF key and a custom chain ID.
 
 <a name="SignTransactionHex"></a>
-## func SignTransactionHex
+## func [SignTransactionHex](<https://github.com/srbde/hive-anther/blob/main/crypto/signature.go#L76>)
 
 ```go
 func SignTransactionHex(txHex string, wif string) (string, error)
@@ -757,7 +777,7 @@ func SignTransactionHex(txHex string, wif string) (string, error)
 SignTransactionHex signs a transaction hex string for the Hive blockchain using the default chain ID.
 
 <a name="SignTransactionHexWithChainID"></a>
-## func SignTransactionHexWithChainID
+## func [SignTransactionHexWithChainID](<https://github.com/srbde/hive-anther/blob/main/crypto/signature.go#L81>)
 
 ```go
 func SignTransactionHexWithChainID(txHex string, wif string, chainID string) (string, error)
@@ -766,7 +786,7 @@ func SignTransactionHexWithChainID(txHex string, wif string, chainID string) (st
 SignTransactionHexWithChainID signs a transaction hex string with the provided chain ID.
 
 <a name="WIFToPublicKey"></a>
-## func WIFToPublicKey
+## func [WIFToPublicKey](<https://github.com/srbde/hive-anther/blob/main/crypto/signature.go#L182>)
 
 ```go
 func WIFToPublicKey(wif string) (string, error)
@@ -799,7 +819,7 @@ import "github.com/srbde/hive-anther/exceptions"
 
 
 <a name="AntherError"></a>
-## type AntherError
+## type [AntherError](<https://github.com/srbde/hive-anther/blob/main/exceptions/exceptions.go#L6-L8>)
 
 AntherError is the base exception for all anther library errors.
 
@@ -810,7 +830,7 @@ type AntherError struct {
 ```
 
 <a name="AntherError.Error"></a>
-### func \(\*AntherError\) Error
+### func \(\*AntherError\) [Error](<https://github.com/srbde/hive-anther/blob/main/exceptions/exceptions.go#L10>)
 
 ```go
 func (e *AntherError) Error() string
@@ -819,7 +839,7 @@ func (e *AntherError) Error() string
 
 
 <a name="InvalidKeyFormatError"></a>
-## type InvalidKeyFormatError
+## type [InvalidKeyFormatError](<https://github.com/srbde/hive-anther/blob/main/exceptions/exceptions.go#L41-L43>)
 
 InvalidKeyFormatError represents an error when a key has an invalid format.
 
@@ -830,7 +850,7 @@ type InvalidKeyFormatError struct {
 ```
 
 <a name="NewInvalidKeyFormatError"></a>
-### func NewInvalidKeyFormatError
+### func [NewInvalidKeyFormatError](<https://github.com/srbde/hive-anther/blob/main/exceptions/exceptions.go#L46>)
 
 ```go
 func NewInvalidKeyFormatError(msg string) *InvalidKeyFormatError
@@ -839,7 +859,7 @@ func NewInvalidKeyFormatError(msg string) *InvalidKeyFormatError
 NewInvalidKeyFormatError creates a new InvalidKeyFormatError.
 
 <a name="MissingKeyError"></a>
-## type MissingKeyError
+## type [MissingKeyError](<https://github.com/srbde/hive-anther/blob/main/exceptions/exceptions.go#L27-L29>)
 
 MissingKeyError represents an error when a key is missing.
 
@@ -850,7 +870,7 @@ type MissingKeyError struct {
 ```
 
 <a name="NewMissingKeyError"></a>
-### func NewMissingKeyError
+### func [NewMissingKeyError](<https://github.com/srbde/hive-anther/blob/main/exceptions/exceptions.go#L32>)
 
 ```go
 func NewMissingKeyError(account, role string) *MissingKeyError
@@ -859,7 +879,7 @@ func NewMissingKeyError(account, role string) *MissingKeyError
 NewMissingKeyError creates a new MissingKeyError.
 
 <a name="NodeError"></a>
-## type NodeError
+## type [NodeError](<https://github.com/srbde/hive-anther/blob/main/exceptions/exceptions.go#L53-L55>)
 
 NodeError represents an error from a Hive node.
 
@@ -870,7 +890,7 @@ type NodeError struct {
 ```
 
 <a name="NewNodeError"></a>
-### func NewNodeError
+### func [NewNodeError](<https://github.com/srbde/hive-anther/blob/main/exceptions/exceptions.go#L58>)
 
 ```go
 func NewNodeError(msg string) *NodeError
@@ -879,7 +899,7 @@ func NewNodeError(msg string) *NodeError
 NewNodeError creates a new NodeError.
 
 <a name="RPCError"></a>
-## type RPCError
+## type [RPCError](<https://github.com/srbde/hive-anther/blob/main/exceptions/exceptions.go#L65-L68>)
 
 RPCError represents a JSON\-RPC error returned by a Hive node.
 
@@ -891,7 +911,7 @@ type RPCError struct {
 ```
 
 <a name="NewRPCError"></a>
-### func NewRPCError
+### func [NewRPCError](<https://github.com/srbde/hive-anther/blob/main/exceptions/exceptions.go#L71>)
 
 ```go
 func NewRPCError(code int, msg string) *RPCError
@@ -900,7 +920,7 @@ func NewRPCError(code int, msg string) *RPCError
 NewRPCError creates a new RPCError.
 
 <a name="SerializationError"></a>
-## type SerializationError
+## type [SerializationError](<https://github.com/srbde/hive-anther/blob/main/exceptions/exceptions.go#L79-L81>)
 
 SerializationError represents a local serialization or deserialization error.
 
@@ -911,7 +931,7 @@ type SerializationError struct {
 ```
 
 <a name="NewSerializationError"></a>
-### func NewSerializationError
+### func [NewSerializationError](<https://github.com/srbde/hive-anther/blob/main/exceptions/exceptions.go#L84>)
 
 ```go
 func NewSerializationError(msg string) *SerializationError
@@ -920,7 +940,7 @@ func NewSerializationError(msg string) *SerializationError
 NewSerializationError creates a new SerializationError.
 
 <a name="TransactionError"></a>
-## type TransactionError
+## type [TransactionError](<https://github.com/srbde/hive-anther/blob/main/exceptions/exceptions.go#L15-L17>)
 
 TransactionError represents an error during transaction operations.
 
@@ -931,7 +951,7 @@ type TransactionError struct {
 ```
 
 <a name="NewTransactionError"></a>
-### func NewTransactionError
+### func [NewTransactionError](<https://github.com/srbde/hive-anther/blob/main/exceptions/exceptions.go#L20>)
 
 ```go
 func NewTransactionError(msg string) *TransactionError
@@ -956,7 +976,7 @@ import "github.com/srbde/hive-anther/haf"
 
 
 <a name="Client"></a>
-## type Client
+## type [Client](<https://github.com/srbde/hive-anther/blob/main/haf/haf.go#L26-L29>)
 
 Client is an HTTP client for interacting with Hive Account Framework \(HAF\) endpoints.
 
@@ -967,7 +987,7 @@ type Client struct {
 ```
 
 <a name="DefaultClient"></a>
-### func DefaultClient
+### func [DefaultClient](<https://github.com/srbde/hive-anther/blob/main/haf/haf.go#L61>)
 
 ```go
 func DefaultClient() (*Client, error)
@@ -976,7 +996,7 @@ func DefaultClient() (*Client, error)
 DefaultClient returns a singleton HAF client configured with the default endpoint list.
 
 <a name="NewClient"></a>
-### func NewClient
+### func [NewClient](<https://github.com/srbde/hive-anther/blob/main/haf/haf.go#L34>)
 
 ```go
 func NewClient(api string, timeout time.Duration) (*Client, error)
@@ -985,7 +1005,7 @@ func NewClient(api string, timeout time.Duration) (*Client, error)
 NewClient constructs a new HAF client using the provided base API URL and timeout. When api is empty the first default HAF endpoint is used. A non\-positive timeout results in the library default timeout of 30 seconds being applied.
 
 <a name="Client.AccountBalances"></a>
-### func \(\*Client\) AccountBalances
+### func \(\*Client\) [AccountBalances](<https://github.com/srbde/hive-anther/blob/main/haf/haf.go#L116>)
 
 ```go
 func (c *Client) AccountBalances(account string) (map[string]any, error)
@@ -994,7 +1014,7 @@ func (c *Client) AccountBalances(account string) (map[string]any, error)
 AccountBalances retrieves balance information for an account via the HAF balance API.
 
 <a name="Client.Reputation"></a>
-### func \(\*Client\) Reputation
+### func \(\*Client\) [Reputation](<https://github.com/srbde/hive-anther/blob/main/haf/haf.go#L75>)
 
 ```go
 func (c *Client) Reputation(account string) (*ReputationResult, error)
@@ -1003,7 +1023,7 @@ func (c *Client) Reputation(account string) (*ReputationResult, error)
 Reputation fetches the reputation information for a single Hive account.
 
 <a name="ReputationResult"></a>
-## type ReputationResult
+## type [ReputationResult](<https://github.com/srbde/hive-anther/blob/main/haf/haf.go#L69-L72>)
 
 ReputationResult represents the structured reputation payload returned by HAF.
 
@@ -1029,7 +1049,7 @@ Package memo provides support for private message \(memo\) encryption and decryp
 
 
 <a name="Decode"></a>
-## func Decode
+## func [Decode](<https://github.com/srbde/hive-anther/blob/main/memo/memo.go#L158>)
 
 ```go
 func Decode(wif string, memo string) (string, error)
@@ -1038,7 +1058,7 @@ func Decode(wif string, memo string) (string, error)
 Decode decrypts a memo if it starts with "\#".
 
 <a name="Encode"></a>
-## func Encode
+## func [Encode](<https://github.com/srbde/hive-anther/blob/main/memo/memo.go#L75>)
 
 ```go
 func Encode(senderWif string, recipientPubKeyStr string, memo string) (string, error)
@@ -1059,47 +1079,59 @@ Package transaction handles constructing, encoding, signing, verifying, and broa
 - [Variables](<#variables>)
 - [type AccountUpdate](<#AccountUpdate>)
   - [func \(au \*AccountUpdate\) Bytes\(\) \(\[\]byte, error\)](<#AccountUpdate.Bytes>)
+  - [func \(au \*AccountUpdate\) FromBytes\(r \*bytes.Reader\) error](<#AccountUpdate.FromBytes>)
   - [func \(au \*AccountUpdate\) ToDict\(\) \(string, map\[string\]any\)](<#AccountUpdate.ToDict>)
 - [type Authority](<#Authority>)
 - [type BeneficiaryRoute](<#BeneficiaryRoute>)
 - [type ClaimAccount](<#ClaimAccount>)
   - [func \(ca \*ClaimAccount\) Bytes\(\) \(\[\]byte, error\)](<#ClaimAccount.Bytes>)
+  - [func \(ca \*ClaimAccount\) FromBytes\(r \*bytes.Reader\) error](<#ClaimAccount.FromBytes>)
   - [func \(ca \*ClaimAccount\) ToDict\(\) \(string, map\[string\]any\)](<#ClaimAccount.ToDict>)
 - [type ClaimRewardBalance](<#ClaimRewardBalance>)
   - [func \(crb \*ClaimRewardBalance\) Bytes\(\) \(\[\]byte, error\)](<#ClaimRewardBalance.Bytes>)
+  - [func \(crb \*ClaimRewardBalance\) FromBytes\(r \*bytes.Reader\) error](<#ClaimRewardBalance.FromBytes>)
   - [func \(crb \*ClaimRewardBalance\) ToDict\(\) \(string, map\[string\]any\)](<#ClaimRewardBalance.ToDict>)
 - [type Comment](<#Comment>)
   - [func \(c \*Comment\) Bytes\(\) \(\[\]byte, error\)](<#Comment.Bytes>)
+  - [func \(c \*Comment\) FromBytes\(r \*bytes.Reader\) error](<#Comment.FromBytes>)
   - [func \(c \*Comment\) ToDict\(\) \(string, map\[string\]any\)](<#Comment.ToDict>)
 - [type CommentExtension](<#CommentExtension>)
 - [type CommentOptions](<#CommentOptions>)
   - [func \(co \*CommentOptions\) Bytes\(\) \(\[\]byte, error\)](<#CommentOptions.Bytes>)
+  - [func \(co \*CommentOptions\) FromBytes\(r \*bytes.Reader\) error](<#CommentOptions.FromBytes>)
   - [func \(co \*CommentOptions\) ToDict\(\) \(string, map\[string\]any\)](<#CommentOptions.ToDict>)
 - [type CommentPayoutBeneficiaries](<#CommentPayoutBeneficiaries>)
   - [func \(c \*CommentPayoutBeneficiaries\) Bytes\(\) \(\[\]byte, error\)](<#CommentPayoutBeneficiaries.Bytes>)
   - [func \(c \*CommentPayoutBeneficiaries\) VariantID\(\) uint64](<#CommentPayoutBeneficiaries.VariantID>)
 - [type CreateClaimedAccount](<#CreateClaimedAccount>)
   - [func \(cca \*CreateClaimedAccount\) Bytes\(\) \(\[\]byte, error\)](<#CreateClaimedAccount.Bytes>)
+  - [func \(cca \*CreateClaimedAccount\) FromBytes\(r \*bytes.Reader\) error](<#CreateClaimedAccount.FromBytes>)
   - [func \(cca \*CreateClaimedAccount\) ToDict\(\) \(string, map\[string\]any\)](<#CreateClaimedAccount.ToDict>)
 - [type CustomJSON](<#CustomJSON>)
   - [func \(cj \*CustomJSON\) Bytes\(\) \(\[\]byte, error\)](<#CustomJSON.Bytes>)
+  - [func \(cj \*CustomJSON\) FromBytes\(r \*bytes.Reader\) error](<#CustomJSON.FromBytes>)
   - [func \(cj \*CustomJSON\) ToDict\(\) \(string, map\[string\]any\)](<#CustomJSON.ToDict>)
 - [type DelegateVestingShares](<#DelegateVestingShares>)
   - [func \(dvs \*DelegateVestingShares\) Bytes\(\) \(\[\]byte, error\)](<#DelegateVestingShares.Bytes>)
+  - [func \(dvs \*DelegateVestingShares\) FromBytes\(r \*bytes.Reader\) error](<#DelegateVestingShares.FromBytes>)
   - [func \(dvs \*DelegateVestingShares\) ToDict\(\) \(string, map\[string\]any\)](<#DelegateVestingShares.ToDict>)
 - [type DeleteComment](<#DeleteComment>)
   - [func \(dc \*DeleteComment\) Bytes\(\) \(\[\]byte, error\)](<#DeleteComment.Bytes>)
+  - [func \(dc \*DeleteComment\) FromBytes\(r \*bytes.Reader\) error](<#DeleteComment.FromBytes>)
   - [func \(dc \*DeleteComment\) ToDict\(\) \(string, map\[string\]any\)](<#DeleteComment.ToDict>)
 - [type Follow](<#Follow>)
   - [func \(f \*Follow\) Bytes\(\) \(\[\]byte, error\)](<#Follow.Bytes>)
+  - [func \(f \*Follow\) FromBytes\(r \*bytes.Reader\) error](<#Follow.FromBytes>)
   - [func \(f \*Follow\) ToDict\(\) \(string, map\[string\]any\)](<#Follow.ToDict>)
 - [type Operation](<#Operation>)
 - [type RPCClient](<#RPCClient>)
 - [type RecurrentTransfer](<#RecurrentTransfer>)
   - [func \(rt \*RecurrentTransfer\) Bytes\(\) \(\[\]byte, error\)](<#RecurrentTransfer.Bytes>)
+  - [func \(rt \*RecurrentTransfer\) FromBytes\(r \*bytes.Reader\) error](<#RecurrentTransfer.FromBytes>)
   - [func \(rt \*RecurrentTransfer\) ToDict\(\) \(string, map\[string\]any\)](<#RecurrentTransfer.ToDict>)
 - [type Transaction](<#Transaction>)
   - [func NewTransaction\(api RPCClient\) \*Transaction](<#NewTransaction>)
+  - [func TransactionFromBytes\(data \[\]byte\) \(\*Transaction, error\)](<#TransactionFromBytes>)
   - [func \(tx \*Transaction\) AppendOp\(op Operation\)](<#Transaction.AppendOp>)
   - [func \(tx \*Transaction\) Broadcast\(\) \(any, error\)](<#Transaction.Broadcast>)
   - [func \(tx \*Transaction\) Bytes\(\) \(\[\]byte, error\)](<#Transaction.Bytes>)
@@ -1109,15 +1141,19 @@ Package transaction handles constructing, encoding, signing, verifying, and broa
   - [func \(tx \*Transaction\) VerifyAuthority\(auth \*Authority, chainID string\) \(bool, error\)](<#Transaction.VerifyAuthority>)
 - [type Transfer](<#Transfer>)
   - [func \(t \*Transfer\) Bytes\(\) \(\[\]byte, error\)](<#Transfer.Bytes>)
+  - [func \(t \*Transfer\) FromBytes\(r \*bytes.Reader\) error](<#Transfer.FromBytes>)
   - [func \(t \*Transfer\) ToDict\(\) \(string, map\[string\]any\)](<#Transfer.ToDict>)
 - [type TransferToVesting](<#TransferToVesting>)
   - [func \(tv \*TransferToVesting\) Bytes\(\) \(\[\]byte, error\)](<#TransferToVesting.Bytes>)
+  - [func \(tv \*TransferToVesting\) FromBytes\(r \*bytes.Reader\) error](<#TransferToVesting.FromBytes>)
   - [func \(tv \*TransferToVesting\) ToDict\(\) \(string, map\[string\]any\)](<#TransferToVesting.ToDict>)
 - [type Vote](<#Vote>)
   - [func \(v \*Vote\) Bytes\(\) \(\[\]byte, error\)](<#Vote.Bytes>)
+  - [func \(v \*Vote\) FromBytes\(r \*bytes.Reader\) error](<#Vote.FromBytes>)
   - [func \(v \*Vote\) ToDict\(\) \(string, map\[string\]any\)](<#Vote.ToDict>)
 - [type WithdrawVesting](<#WithdrawVesting>)
   - [func \(wv \*WithdrawVesting\) Bytes\(\) \(\[\]byte, error\)](<#WithdrawVesting.Bytes>)
+  - [func \(wv \*WithdrawVesting\) FromBytes\(r \*bytes.Reader\) error](<#WithdrawVesting.FromBytes>)
   - [func \(wv \*WithdrawVesting\) ToDict\(\) \(string, map\[string\]any\)](<#WithdrawVesting.ToDict>)
 
 
@@ -1136,7 +1172,7 @@ var OperationNames = map[string]int{
 ```
 
 <a name="AccountUpdate"></a>
-## type AccountUpdate
+## type [AccountUpdate](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L628-L635>)
 
 AccountUpdate represents an account\_update operation.
 
@@ -1152,7 +1188,7 @@ type AccountUpdate struct {
 ```
 
 <a name="AccountUpdate.Bytes"></a>
-### func \(\*AccountUpdate\) Bytes
+### func \(\*AccountUpdate\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L655>)
 
 ```go
 func (au *AccountUpdate) Bytes() ([]byte, error)
@@ -1160,8 +1196,17 @@ func (au *AccountUpdate) Bytes() ([]byte, error)
 
 
 
+<a name="AccountUpdate.FromBytes"></a>
+### func \(\*AccountUpdate\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L707>)
+
+```go
+func (au *AccountUpdate) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes AccountUpdate from binary bytes.
+
 <a name="AccountUpdate.ToDict"></a>
-### func \(\*AccountUpdate\) ToDict
+### func \(\*AccountUpdate\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L637>)
 
 ```go
 func (au *AccountUpdate) ToDict() (string, map[string]any)
@@ -1170,20 +1215,16 @@ func (au *AccountUpdate) ToDict() (string, map[string]any)
 
 
 <a name="Authority"></a>
-## type Authority
+## type [Authority](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L16>)
 
-Authority represents a cryptographic voting or transaction threshold authority.
+Authority represents a cryptographic voting or transaction threshold authority. It is an alias for types.Authority, which also handles Hive's JSON wire format for the read side \(e.g. types.AccountData's owner/active/posting fields\).
 
 ```go
-type Authority struct {
-    WeightThreshold uint32            `json:"weight_threshold"`
-    AccountAuths    map[string]uint16 `json:"account_auths"`
-    KeyAuths        map[string]uint16 `json:"key_auths"`
-}
+type Authority = types.Authority
 ```
 
 <a name="BeneficiaryRoute"></a>
-## type BeneficiaryRoute
+## type [BeneficiaryRoute](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L104-L107>)
 
 BeneficiaryRoute represents a single beneficiary and their reward share.
 
@@ -1195,7 +1236,7 @@ type BeneficiaryRoute struct {
 ```
 
 <a name="ClaimAccount"></a>
-## type ClaimAccount
+## type [ClaimAccount](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L517-L520>)
 
 ClaimAccount represents a claim\_account operation.
 
@@ -1207,7 +1248,7 @@ type ClaimAccount struct {
 ```
 
 <a name="ClaimAccount.Bytes"></a>
-### func \(\*ClaimAccount\) Bytes
+### func \(\*ClaimAccount\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L530>)
 
 ```go
 func (ca *ClaimAccount) Bytes() ([]byte, error)
@@ -1215,8 +1256,17 @@ func (ca *ClaimAccount) Bytes() ([]byte, error)
 
 
 
+<a name="ClaimAccount.FromBytes"></a>
+### func \(\*ClaimAccount\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L557>)
+
+```go
+func (ca *ClaimAccount) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes ClaimAccount from binary bytes.
+
 <a name="ClaimAccount.ToDict"></a>
-### func \(\*ClaimAccount\) ToDict
+### func \(\*ClaimAccount\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L522>)
 
 ```go
 func (ca *ClaimAccount) ToDict() (string, map[string]any)
@@ -1225,7 +1275,7 @@ func (ca *ClaimAccount) ToDict() (string, map[string]any)
 
 
 <a name="ClaimRewardBalance"></a>
-## type ClaimRewardBalance
+## type [ClaimRewardBalance](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L384-L389>)
 
 ClaimRewardBalance represents a claim\_reward\_balance operation.
 
@@ -1239,7 +1289,7 @@ type ClaimRewardBalance struct {
 ```
 
 <a name="ClaimRewardBalance.Bytes"></a>
-### func \(\*ClaimRewardBalance\) Bytes
+### func \(\*ClaimRewardBalance\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L400>)
 
 ```go
 func (crb *ClaimRewardBalance) Bytes() ([]byte, error)
@@ -1247,8 +1297,17 @@ func (crb *ClaimRewardBalance) Bytes() ([]byte, error)
 
 
 
+<a name="ClaimRewardBalance.FromBytes"></a>
+### func \(\*ClaimRewardBalance\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L444>)
+
+```go
+func (crb *ClaimRewardBalance) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes ClaimRewardBalance from binary bytes.
+
 <a name="ClaimRewardBalance.ToDict"></a>
-### func \(\*ClaimRewardBalance\) ToDict
+### func \(\*ClaimRewardBalance\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L391>)
 
 ```go
 func (crb *ClaimRewardBalance) ToDict() (string, map[string]any)
@@ -1257,7 +1316,7 @@ func (crb *ClaimRewardBalance) ToDict() (string, map[string]any)
 
 
 <a name="Comment"></a>
-## type Comment
+## type [Comment](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L569-L577>)
 
 Comment represents a comment \(post\) operation.
 
@@ -1274,7 +1333,7 @@ type Comment struct {
 ```
 
 <a name="Comment.Bytes"></a>
-### func \(\*Comment\) Bytes
+### func \(\*Comment\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L593>)
 
 ```go
 func (c *Comment) Bytes() ([]byte, error)
@@ -1282,8 +1341,17 @@ func (c *Comment) Bytes() ([]byte, error)
 
 Bytes returns the binary representation of the comment operation.
 
+<a name="Comment.FromBytes"></a>
+### func \(\*Comment\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L625>)
+
+```go
+func (c *Comment) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes a Comment from binary bytes \(after op ID has been read\).
+
 <a name="Comment.ToDict"></a>
-### func \(\*Comment\) ToDict
+### func \(\*Comment\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L580>)
 
 ```go
 func (c *Comment) ToDict() (string, map[string]any)
@@ -1292,7 +1360,7 @@ func (c *Comment) ToDict() (string, map[string]any)
 ToDict returns the operation as a dictionary.
 
 <a name="CommentExtension"></a>
-## type CommentExtension
+## type [CommentExtension](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L98-L101>)
 
 CommentExtension is an interface for comment extensions.
 
@@ -1304,7 +1372,7 @@ type CommentExtension interface {
 ```
 
 <a name="CommentOptions"></a>
-## type CommentOptions
+## type [CommentOptions](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L87-L95>)
 
 CommentOptions represents a comment\_options operation.
 
@@ -1321,7 +1389,7 @@ type CommentOptions struct {
 ```
 
 <a name="CommentOptions.Bytes"></a>
-### func \(\*CommentOptions\) Bytes
+### func \(\*CommentOptions\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L155>)
 
 ```go
 func (co *CommentOptions) Bytes() ([]byte, error)
@@ -1329,8 +1397,17 @@ func (co *CommentOptions) Bytes() ([]byte, error)
 
 
 
+<a name="CommentOptions.FromBytes"></a>
+### func \(\*CommentOptions\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L213>)
+
+```go
+func (co *CommentOptions) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes CommentOptions from binary bytes.
+
 <a name="CommentOptions.ToDict"></a>
-### func \(\*CommentOptions\) ToDict
+### func \(\*CommentOptions\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L136>)
 
 ```go
 func (co *CommentOptions) ToDict() (string, map[string]any)
@@ -1339,7 +1416,7 @@ func (co *CommentOptions) ToDict() (string, map[string]any)
 
 
 <a name="CommentPayoutBeneficiaries"></a>
-## type CommentPayoutBeneficiaries
+## type [CommentPayoutBeneficiaries](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L110-L112>)
 
 CommentPayoutBeneficiaries represents the beneficiaries comment extension.
 
@@ -1350,7 +1427,7 @@ type CommentPayoutBeneficiaries struct {
 ```
 
 <a name="CommentPayoutBeneficiaries.Bytes"></a>
-### func \(\*CommentPayoutBeneficiaries\) Bytes
+### func \(\*CommentPayoutBeneficiaries\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L118>)
 
 ```go
 func (c *CommentPayoutBeneficiaries) Bytes() ([]byte, error)
@@ -1359,7 +1436,7 @@ func (c *CommentPayoutBeneficiaries) Bytes() ([]byte, error)
 
 
 <a name="CommentPayoutBeneficiaries.VariantID"></a>
-### func \(\*CommentPayoutBeneficiaries\) VariantID
+### func \(\*CommentPayoutBeneficiaries\) [VariantID](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L114>)
 
 ```go
 func (c *CommentPayoutBeneficiaries) VariantID() uint64
@@ -1368,7 +1445,7 @@ func (c *CommentPayoutBeneficiaries) VariantID() uint64
 
 
 <a name="CreateClaimedAccount"></a>
-## type CreateClaimedAccount
+## type [CreateClaimedAccount](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L562-L570>)
 
 CreateClaimedAccount represents a create\_claimed\_account operation.
 
@@ -1385,7 +1462,7 @@ type CreateClaimedAccount struct {
 ```
 
 <a name="CreateClaimedAccount.Bytes"></a>
-### func \(\*CreateClaimedAccount\) Bytes
+### func \(\*CreateClaimedAccount\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L585>)
 
 ```go
 func (cca *CreateClaimedAccount) Bytes() ([]byte, error)
@@ -1393,8 +1470,17 @@ func (cca *CreateClaimedAccount) Bytes() ([]byte, error)
 
 
 
+<a name="CreateClaimedAccount.FromBytes"></a>
+### func \(\*CreateClaimedAccount\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L623>)
+
+```go
+func (cca *CreateClaimedAccount) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes CreateClaimedAccount from binary bytes.
+
 <a name="CreateClaimedAccount.ToDict"></a>
-### func \(\*CreateClaimedAccount\) ToDict
+### func \(\*CreateClaimedAccount\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L572>)
 
 ```go
 func (cca *CreateClaimedAccount) ToDict() (string, map[string]any)
@@ -1403,7 +1489,7 @@ func (cca *CreateClaimedAccount) ToDict() (string, map[string]any)
 
 
 <a name="CustomJSON"></a>
-## type CustomJSON
+## type [CustomJSON](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L652-L657>)
 
 CustomJSON represents a custom JSON operation.
 
@@ -1417,7 +1503,7 @@ type CustomJSON struct {
 ```
 
 <a name="CustomJSON.Bytes"></a>
-### func \(\*CustomJSON\) Bytes
+### func \(\*CustomJSON\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L678>)
 
 ```go
 func (cj *CustomJSON) Bytes() ([]byte, error)
@@ -1425,8 +1511,17 @@ func (cj *CustomJSON) Bytes() ([]byte, error)
 
 Bytes returns the binary representation of the custom json operation.
 
+<a name="CustomJSON.FromBytes"></a>
+### func \(\*CustomJSON\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L701>)
+
+```go
+func (cj *CustomJSON) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes a CustomJSON from binary bytes \(after op ID has been read\).
+
 <a name="CustomJSON.ToDict"></a>
-### func \(\*CustomJSON\) ToDict
+### func \(\*CustomJSON\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L660>)
 
 ```go
 func (cj *CustomJSON) ToDict() (string, map[string]any)
@@ -1435,7 +1530,7 @@ func (cj *CustomJSON) ToDict() (string, map[string]any)
 ToDict returns the operation as a dictionary.
 
 <a name="DelegateVestingShares"></a>
-## type DelegateVestingShares
+## type [DelegateVestingShares](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L338-L342>)
 
 DelegateVestingShares represents a delegate\_vesting\_shares operation.
 
@@ -1448,7 +1543,7 @@ type DelegateVestingShares struct {
 ```
 
 <a name="DelegateVestingShares.Bytes"></a>
-### func \(\*DelegateVestingShares\) Bytes
+### func \(\*DelegateVestingShares\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L352>)
 
 ```go
 func (dvs *DelegateVestingShares) Bytes() ([]byte, error)
@@ -1456,8 +1551,17 @@ func (dvs *DelegateVestingShares) Bytes() ([]byte, error)
 
 
 
+<a name="DelegateVestingShares.FromBytes"></a>
+### func \(\*DelegateVestingShares\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L379>)
+
+```go
+func (dvs *DelegateVestingShares) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes DelegateVestingShares from binary bytes.
+
 <a name="DelegateVestingShares.ToDict"></a>
-### func \(\*DelegateVestingShares\) ToDict
+### func \(\*DelegateVestingShares\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L344>)
 
 ```go
 func (dvs *DelegateVestingShares) ToDict() (string, map[string]any)
@@ -1466,7 +1570,7 @@ func (dvs *DelegateVestingShares) ToDict() (string, map[string]any)
 
 
 <a name="DeleteComment"></a>
-## type DeleteComment
+## type [DeleteComment](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L218-L221>)
 
 DeleteComment represents a delete\_comment operation.
 
@@ -1478,7 +1582,7 @@ type DeleteComment struct {
 ```
 
 <a name="DeleteComment.Bytes"></a>
-### func \(\*DeleteComment\) Bytes
+### func \(\*DeleteComment\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L230>)
 
 ```go
 func (dc *DeleteComment) Bytes() ([]byte, error)
@@ -1486,8 +1590,17 @@ func (dc *DeleteComment) Bytes() ([]byte, error)
 
 
 
+<a name="DeleteComment.FromBytes"></a>
+### func \(\*DeleteComment\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L246>)
+
+```go
+func (dc *DeleteComment) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes DeleteComment from binary bytes.
+
 <a name="DeleteComment.ToDict"></a>
-### func \(\*DeleteComment\) ToDict
+### func \(\*DeleteComment\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L223>)
 
 ```go
 func (dc *DeleteComment) ToDict() (string, map[string]any)
@@ -1496,7 +1609,7 @@ func (dc *DeleteComment) ToDict() (string, map[string]any)
 
 
 <a name="Follow"></a>
-## type Follow
+## type [Follow](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L719-L723>)
 
 Follow represents a follow operation via custom JSON.
 
@@ -1509,7 +1622,7 @@ type Follow struct {
 ```
 
 <a name="Follow.Bytes"></a>
-### func \(\*Follow\) Bytes
+### func \(\*Follow\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L744>)
 
 ```go
 func (f *Follow) Bytes() ([]byte, error)
@@ -1517,8 +1630,17 @@ func (f *Follow) Bytes() ([]byte, error)
 
 Bytes returns the binary representation of the follow operation.
 
+<a name="Follow.FromBytes"></a>
+### func \(\*Follow\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L767>)
+
+```go
+func (f *Follow) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes a Follow from binary bytes \(after op ID has been read\). Follow is a CustomJSON wrapper, so this delegates to CustomJSON deserialization.
+
 <a name="Follow.ToDict"></a>
-### func \(\*Follow\) ToDict
+### func \(\*Follow\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L726>)
 
 ```go
 func (f *Follow) ToDict() (string, map[string]any)
@@ -1527,7 +1649,7 @@ func (f *Follow) ToDict() (string, map[string]any)
 ToDict returns the operation as a dictionary.
 
 <a name="Operation"></a>
-## type Operation
+## type [Operation](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L44-L49>)
 
 Operation is an interface for all Hive operations.
 
@@ -1535,11 +1657,13 @@ Operation is an interface for all Hive operations.
 type Operation interface {
     ToDict() (string, map[string]any)
     Bytes() ([]byte, error)
+    // FromBytes deserializes the operation from binary bytes (after op ID has been read).
+    FromBytes(r *bytes.Reader) error
 }
 ```
 
 <a name="RPCClient"></a>
-## type RPCClient
+## type [RPCClient](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L19-L22>)
 
 RPCClient defines the client behaviors required by Transaction operations.
 
@@ -1551,7 +1675,7 @@ type RPCClient interface {
 ```
 
 <a name="RecurrentTransfer"></a>
-## type RecurrentTransfer
+## type [RecurrentTransfer](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L449-L456>)
 
 RecurrentTransfer represents a recurrent\_transfer operation.
 
@@ -1567,7 +1691,7 @@ type RecurrentTransfer struct {
 ```
 
 <a name="RecurrentTransfer.Bytes"></a>
-### func \(\*RecurrentTransfer\) Bytes
+### func \(\*RecurrentTransfer\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L470>)
 
 ```go
 func (rt *RecurrentTransfer) Bytes() ([]byte, error)
@@ -1575,8 +1699,17 @@ func (rt *RecurrentTransfer) Bytes() ([]byte, error)
 
 
 
+<a name="RecurrentTransfer.FromBytes"></a>
+### func \(\*RecurrentTransfer\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L512>)
+
+```go
+func (rt *RecurrentTransfer) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes RecurrentTransfer from binary bytes.
+
 <a name="RecurrentTransfer.ToDict"></a>
-### func \(\*RecurrentTransfer\) ToDict
+### func \(\*RecurrentTransfer\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L458>)
 
 ```go
 func (rt *RecurrentTransfer) ToDict() (string, map[string]any)
@@ -1585,7 +1718,7 @@ func (rt *RecurrentTransfer) ToDict() (string, map[string]any)
 
 
 <a name="Transaction"></a>
-## type Transaction
+## type [Transaction](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L34-L41>)
 
 Transaction represents a Hive transaction.
 
@@ -1601,7 +1734,7 @@ type Transaction struct {
 ```
 
 <a name="NewTransaction"></a>
-### func NewTransaction
+### func [NewTransaction](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L52>)
 
 ```go
 func NewTransaction(api RPCClient) *Transaction
@@ -1609,8 +1742,17 @@ func NewTransaction(api RPCClient) *Transaction
 
 NewTransaction creates a new Transaction.
 
+<a name="TransactionFromBytes"></a>
+### func [TransactionFromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L519>)
+
+```go
+func TransactionFromBytes(data []byte) (*Transaction, error)
+```
+
+TransactionFromBytes deserializes a Transaction from binary bytes.
+
 <a name="Transaction.AppendOp"></a>
-### func \(\*Transaction\) AppendOp
+### func \(\*Transaction\) [AppendOp](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L61>)
 
 ```go
 func (tx *Transaction) AppendOp(op Operation)
@@ -1619,7 +1761,7 @@ func (tx *Transaction) AppendOp(op Operation)
 AppendOp appends an operation to the transaction.
 
 <a name="Transaction.Broadcast"></a>
-### func \(\*Transaction\) Broadcast
+### func \(\*Transaction\) [Broadcast](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L150>)
 
 ```go
 func (tx *Transaction) Broadcast() (any, error)
@@ -1628,7 +1770,7 @@ func (tx *Transaction) Broadcast() (any, error)
 Broadcast the transaction to the network.
 
 <a name="Transaction.Bytes"></a>
-### func \(\*Transaction\) Bytes
+### func \(\*Transaction\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L197>)
 
 ```go
 func (tx *Transaction) Bytes() ([]byte, error)
@@ -1637,7 +1779,7 @@ func (tx *Transaction) Bytes() ([]byte, error)
 Bytes returns the serialized transaction bytes \(for signing\)
 
 <a name="Transaction.ID"></a>
-### func \(\*Transaction\) ID
+### func \(\*Transaction\) [ID](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L140>)
 
 ```go
 func (tx *Transaction) ID() (string, error)
@@ -1646,7 +1788,7 @@ func (tx *Transaction) ID() (string, error)
 ID calculates and returns the transaction ID \(first 20 bytes of SHA\-256 hash of serialized transaction bytes\).
 
 <a name="Transaction.Sign"></a>
-### func \(\*Transaction\) Sign
+### func \(\*Transaction\) [Sign](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L66>)
 
 ```go
 func (tx *Transaction) Sign(wif string) error
@@ -1655,7 +1797,7 @@ func (tx *Transaction) Sign(wif string) error
 Sign the transaction with a private key in WIF format.
 
 <a name="Transaction.SignMany"></a>
-### func \(\*Transaction\) SignMany
+### func \(\*Transaction\) [SignMany](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L92>)
 
 ```go
 func (tx *Transaction) SignMany(wifKeys []string) error
@@ -1664,7 +1806,7 @@ func (tx *Transaction) SignMany(wifKeys []string) error
 SignMany signs the transaction with multiple WIF keys.
 
 <a name="Transaction.VerifyAuthority"></a>
-### func \(\*Transaction\) VerifyAuthority
+### func \(\*Transaction\) [VerifyAuthority](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L102>)
 
 ```go
 func (tx *Transaction) VerifyAuthority(auth *Authority, chainID string) (bool, error)
@@ -1673,7 +1815,7 @@ func (tx *Transaction) VerifyAuthority(auth *Authority, chainID string) (bool, e
 VerifyAuthority verifies if the accumulated signatures satisfy the provided authority's threshold using direct key auths.
 
 <a name="Transfer"></a>
-## type Transfer
+## type [Transfer](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L345-L350>)
 
 Transfer represents a transfer operation.
 
@@ -1687,7 +1829,7 @@ type Transfer struct {
 ```
 
 <a name="Transfer.Bytes"></a>
-### func \(\*Transfer\) Bytes
+### func \(\*Transfer\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L364>)
 
 ```go
 func (t *Transfer) Bytes() ([]byte, error)
@@ -1695,8 +1837,17 @@ func (t *Transfer) Bytes() ([]byte, error)
 
 Bytes returns the binary representation for wire protocol serialization This is used during transaction signing and handles HIVE\-\>STEEM conversion
 
+<a name="Transfer.FromBytes"></a>
+### func \(\*Transfer\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L399>)
+
+```go
+func (t *Transfer) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes a Transfer from binary bytes \(after op ID has been read\).
+
 <a name="Transfer.ToDict"></a>
-### func \(\*Transfer\) ToDict
+### func \(\*Transfer\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L353>)
 
 ```go
 func (t *Transfer) ToDict() (string, map[string]any)
@@ -1705,7 +1856,7 @@ func (t *Transfer) ToDict() (string, map[string]any)
 ToDict returns the operation as a dictionary.
 
 <a name="TransferToVesting"></a>
-## type TransferToVesting
+## type [TransferToVesting](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L251-L255>)
 
 TransferToVesting represents a transfer\_to\_vesting operation.
 
@@ -1718,7 +1869,7 @@ type TransferToVesting struct {
 ```
 
 <a name="TransferToVesting.Bytes"></a>
-### func \(\*TransferToVesting\) Bytes
+### func \(\*TransferToVesting\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L265>)
 
 ```go
 func (tv *TransferToVesting) Bytes() ([]byte, error)
@@ -1726,8 +1877,17 @@ func (tv *TransferToVesting) Bytes() ([]byte, error)
 
 
 
+<a name="TransferToVesting.FromBytes"></a>
+### func \(\*TransferToVesting\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L292>)
+
+```go
+func (tv *TransferToVesting) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes TransferToVesting from binary bytes.
+
 <a name="TransferToVesting.ToDict"></a>
-### func \(\*TransferToVesting\) ToDict
+### func \(\*TransferToVesting\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L257>)
 
 ```go
 func (tv *TransferToVesting) ToDict() (string, map[string]any)
@@ -1736,7 +1896,7 @@ func (tv *TransferToVesting) ToDict() (string, map[string]any)
 
 
 <a name="Vote"></a>
-## type Vote
+## type [Vote](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L289-L294>)
 
 Vote represents a vote operation.
 
@@ -1750,7 +1910,7 @@ type Vote struct {
 ```
 
 <a name="Vote.Bytes"></a>
-### func \(\*Vote\) Bytes
+### func \(\*Vote\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L307>)
 
 ```go
 func (v *Vote) Bytes() ([]byte, error)
@@ -1758,8 +1918,17 @@ func (v *Vote) Bytes() ([]byte, error)
 
 Bytes returns the binary representation of the vote operation.
 
+<a name="Vote.FromBytes"></a>
+### func \(\*Vote\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L330>)
+
+```go
+func (v *Vote) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes a Vote from binary bytes \(after op ID has been read\).
+
 <a name="Vote.ToDict"></a>
-### func \(\*Vote\) ToDict
+### func \(\*Vote\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/transaction.go#L297>)
 
 ```go
 func (v *Vote) ToDict() (string, map[string]any)
@@ -1768,7 +1937,7 @@ func (v *Vote) ToDict() (string, map[string]any)
 ToDict returns the operation as a dictionary.
 
 <a name="WithdrawVesting"></a>
-## type WithdrawVesting
+## type [WithdrawVesting](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L297-L300>)
 
 WithdrawVesting represents a withdraw\_vesting operation.
 
@@ -1780,7 +1949,7 @@ type WithdrawVesting struct {
 ```
 
 <a name="WithdrawVesting.Bytes"></a>
-### func \(\*WithdrawVesting\) Bytes
+### func \(\*WithdrawVesting\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L309>)
 
 ```go
 func (wv *WithdrawVesting) Bytes() ([]byte, error)
@@ -1788,8 +1957,17 @@ func (wv *WithdrawVesting) Bytes() ([]byte, error)
 
 
 
+<a name="WithdrawVesting.FromBytes"></a>
+### func \(\*WithdrawVesting\) [FromBytes](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L333>)
+
+```go
+func (wv *WithdrawVesting) FromBytes(r *bytes.Reader) error
+```
+
+FromBytes deserializes WithdrawVesting from binary bytes.
+
 <a name="WithdrawVesting.ToDict"></a>
-### func \(\*WithdrawVesting\) ToDict
+### func \(\*WithdrawVesting\) [ToDict](<https://github.com/srbde/hive-anther/blob/main/transaction/operations.go#L302>)
 
 ```go
 func (wv *WithdrawVesting) ToDict() (string, map[string]any)
@@ -1810,20 +1988,28 @@ Package types defines the core structures and types used across the Anther libra
 - [Variables](<#variables>)
 - [type AccountData](<#AccountData>)
 - [type Amount](<#Amount>)
+  - [func AmountFromBytes\(r \*bytes.Reader\) \(\*Amount, error\)](<#AmountFromBytes>)
   - [func NewAmount\(value float64, symbol string\) \*Amount](<#NewAmount>)
   - [func ParseAmount\(s string\) \(\*Amount, error\)](<#ParseAmount>)
   - [func \(a \*Amount\) Bytes\(\) \(\[\]byte, error\)](<#Amount.Bytes>)
   - [func \(a \*Amount\) String\(\) string](<#Amount.String>)
 - [type AppliedOperation](<#AppliedOperation>)
+- [type Authority](<#Authority>)
+  - [func \(a Authority\) MarshalJSON\(\) \(\[\]byte, error\)](<#Authority.MarshalJSON>)
+  - [func \(a \*Authority\) UnmarshalJSON\(data \[\]byte\) error](<#Authority.UnmarshalJSON>)
 - [type Block](<#Block>)
 - [type BlockHeader](<#BlockHeader>)
 - [type ChainProperties](<#ChainProperties>)
+- [type CustomJSONOperation](<#CustomJSONOperation>)
 - [type DynamicGlobalProperties](<#DynamicGlobalProperties>)
 - [type HistoryItem](<#HistoryItem>)
   - [func \(h \*HistoryItem\) UnmarshalJSON\(data \[\]byte\) error](<#HistoryItem.UnmarshalJSON>)
 - [type Manabar](<#Manabar>)
   - [func \(m \*Manabar\) UnmarshalJSON\(data \[\]byte\) error](<#Manabar.UnmarshalJSON>)
 - [type OperationTuple](<#OperationTuple>)
+  - [func \(ot OperationTuple\) CustomJSON\(\) \(CustomJSONOperation, bool, error\)](<#OperationTuple.CustomJSON>)
+  - [func \(ot OperationTuple\) CustomJSONID\(\) \(string, bool\)](<#OperationTuple.CustomJSONID>)
+  - [func \(ot OperationTuple\) Transfer\(\) \(TransferOperation, bool, error\)](<#OperationTuple.Transfer>)
   - [func \(ot \*OperationTuple\) UnmarshalJSON\(data \[\]byte\) error](<#OperationTuple.UnmarshalJSON>)
 - [type Price](<#Price>)
 - [type RCInfo](<#RCInfo>)
@@ -1833,10 +2019,23 @@ Package types defines the core structures and types used across the Anther libra
   - [func \(ht Time\) Time\(\) time.Time](<#Time.Time>)
   - [func \(ht \*Time\) UnmarshalJSON\(b \[\]byte\) error](<#Time.UnmarshalJSON>)
 - [type TransactionInBlock](<#TransactionInBlock>)
+- [type TransferOperation](<#TransferOperation>)
 - [type VestingDelegation](<#VestingDelegation>)
 
 
 ## Variables
+
+<a name="ErrMalformedOperationTuple"></a>Errors returned by typed operation helpers when a matching operation cannot be decoded without guessing at the Hive wire representation.
+
+```go
+var (
+    ErrMalformedOperationTuple = errors.New("malformed operation tuple")
+    ErrMissingOperationField   = errors.New("missing operation field")
+    ErrWrongOperationFieldType = errors.New("wrong operation field type")
+    ErrMalformedAmount         = errors.New("malformed operation amount")
+    ErrMalformedAuthArray      = errors.New("malformed authorization array")
+)
+```
 
 <a name="AssetMetadata"></a>Asset metadata for serialization
 
@@ -1845,6 +2044,15 @@ var AssetMetadata = map[string]map[string]any{
     "HIVE":  {"precision": int64(3)},
     "HBD":   {"precision": int64(3)},
     "VESTS": {"precision": int64(6)},
+}
+```
+
+<a name="DisplaySymbolAliases"></a>DisplaySymbolAliases maps wire symbols back to display symbols
+
+```go
+var DisplaySymbolAliases = map[string]string{
+    "STEEM": "HIVE",
+    "SBD":   "HBD",
 }
 ```
 
@@ -1858,25 +2066,29 @@ var WireSymbolAliases = map[string]string{
 ```
 
 <a name="AccountData"></a>
-## type AccountData
+## type [AccountData](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L243-L256>)
 
 AccountData represents Hive account query results.
 
 ```go
 type AccountData struct {
-    Name          string  `json:"name"`
-    VotingPower   float64 `json:"voting_power"`
-    VotingManabar Manabar `json:"voting_manabar"`
-    LastVoteTime  Time    `json:"last_vote_time"`
-    Balance       string  `json:"balance"`
-    HbdBalance    string  `json:"hbd_balance"`
-    VestingShares string  `json:"vesting_shares"`
-    Created       Time    `json:"created"`
+    Name          string    `json:"name"`
+    VotingPower   float64   `json:"voting_power"`
+    VotingManabar Manabar   `json:"voting_manabar"`
+    LastVoteTime  Time      `json:"last_vote_time"`
+    Balance       string    `json:"balance"`
+    HbdBalance    string    `json:"hbd_balance"`
+    VestingShares string    `json:"vesting_shares"`
+    Created       Time      `json:"created"`
+    Owner         Authority `json:"owner"`
+    Active        Authority `json:"active"`
+    Posting       Authority `json:"posting"`
+    MemoKey       string    `json:"memo_key"`
 }
 ```
 
 <a name="Amount"></a>
-## type Amount
+## type [Amount](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L58-L61>)
 
 Amount represents a Hive asset \(e.g., "100.000 HIVE"\).
 
@@ -1887,8 +2099,17 @@ type Amount struct {
 }
 ```
 
+<a name="AmountFromBytes"></a>
+### func [AmountFromBytes](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L168>)
+
+```go
+func AmountFromBytes(r *bytes.Reader) (*Amount, error)
+```
+
+AmountFromBytes deserializes an Amount from binary wire format. Format: int64 LE \(satoshis\) \+ uint8 \(precision\) \+ 7 bytes \(symbol, null\-padded\).
+
 <a name="NewAmount"></a>
-### func NewAmount
+### func [NewAmount](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L84>)
 
 ```go
 func NewAmount(value float64, symbol string) *Amount
@@ -1897,7 +2118,7 @@ func NewAmount(value float64, symbol string) *Amount
 NewAmount creates a new Amount from a value and symbol.
 
 <a name="ParseAmount"></a>
-### func ParseAmount
+### func [ParseAmount](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L92>)
 
 ```go
 func ParseAmount(s string) (*Amount, error)
@@ -1906,7 +2127,7 @@ func ParseAmount(s string) (*Amount, error)
 ParseAmount parses a string like "100.000 HIVE" into an Amount.
 
 <a name="Amount.Bytes"></a>
-### func \(\*Amount\) Bytes
+### func \(\*Amount\) [Bytes](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L116>)
 
 ```go
 func (a *Amount) Bytes() ([]byte, error)
@@ -1915,7 +2136,7 @@ func (a *Amount) Bytes() ([]byte, error)
 Bytes returns the binary representation of the amount for wire serialization. This handles the HIVE\-\>STEEM and HBD\-\>SBD conversion for signing.
 
 <a name="Amount.String"></a>
-### func \(\*Amount\) String
+### func \(\*Amount\) [String](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L110>)
 
 ```go
 func (a *Amount) String() string
@@ -1924,7 +2145,7 @@ func (a *Amount) String() string
 String returns the string representation of the amount.
 
 <a name="AppliedOperation"></a>
-## type AppliedOperation
+## type [AppliedOperation](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L560-L567>)
 
 AppliedOperation represents an operation applied to the blockchain.
 
@@ -1939,8 +2160,39 @@ type AppliedOperation struct {
 }
 ```
 
+<a name="Authority"></a>
+## type [Authority](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L261-L265>)
+
+Authority represents Hive's weighted\-key/account voting threshold model, used both for interpreting an account's owner/active/posting authorities \(read side\) and for building operations that set them, such as account\_update \(write side, see the transaction package\).
+
+```go
+type Authority struct {
+    WeightThreshold uint32
+    AccountAuths    map[string]uint16
+    KeyAuths        map[string]uint16
+}
+```
+
+<a name="Authority.MarshalJSON"></a>
+### func \(Authority\) [MarshalJSON](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L328>)
+
+```go
+func (a Authority) MarshalJSON() ([]byte, error)
+```
+
+MarshalJSON customizes marshaling for Authority to emit Hive's tuple\-array wire format for account\_auths/key\_auths instead of the default JSON object encoding of a Go map.
+
+<a name="Authority.UnmarshalJSON"></a>
+### func \(\*Authority\) [UnmarshalJSON](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L307>)
+
+```go
+func (a *Authority) UnmarshalJSON(data []byte) error
+```
+
+UnmarshalJSON customizes unmarshaling for Authority to parse Hive's tuple\-array wire format for account\_auths/key\_auths into weight maps.
+
 <a name="Block"></a>
-## type Block
+## type [Block](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L546-L557>)
 
 Block represents a full signed Hive block.
 
@@ -1960,7 +2212,7 @@ type Block struct {
 ```
 
 <a name="BlockHeader"></a>
-## type BlockHeader
+## type [BlockHeader](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L347-L353>)
 
 BlockHeader represents the header of a Hive block.
 
@@ -1975,7 +2227,7 @@ type BlockHeader struct {
 ```
 
 <a name="ChainProperties"></a>
-## type ChainProperties
+## type [ChainProperties](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L570-L574>)
 
 ChainProperties represents the blockchain configuration properties.
 
@@ -1987,8 +2239,22 @@ type ChainProperties struct {
 }
 ```
 
+<a name="CustomJSONOperation"></a>
+## type [CustomJSONOperation](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L377-L382>)
+
+CustomJSONOperation contains the Hive\-generic fields of a custom\_json operation.
+
+```go
+type CustomJSONOperation struct {
+    ID                   string
+    RequiredAuths        []string
+    RequiredPostingAuths []string
+    JSON                 string
+}
+```
+
 <a name="DynamicGlobalProperties"></a>
-## type DynamicGlobalProperties
+## type [DynamicGlobalProperties](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L198-L205>)
 
 DynamicGlobalProperties represents the dynamic global properties of the Hive blockchain.
 
@@ -1998,11 +2264,13 @@ type DynamicGlobalProperties struct {
     HeadBlockID              string `json:"head_block_id"`
     Time                     Time   `json:"time"`
     LastIrreversibleBlockNum uint32 `json:"last_irreversible_block_num"`
+    TotalVestingFundHive     string `json:"total_vesting_fund_hive"`
+    TotalVestingShares       string `json:"total_vesting_shares"`
 }
 ```
 
 <a name="HistoryItem"></a>
-## type HistoryItem
+## type [HistoryItem](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L583-L586>)
 
 HistoryItem represents an entry in the account history.
 
@@ -2014,7 +2282,7 @@ type HistoryItem struct {
 ```
 
 <a name="HistoryItem.UnmarshalJSON"></a>
-### func \(\*HistoryItem\) UnmarshalJSON
+### func \(\*HistoryItem\) [UnmarshalJSON](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L589>)
 
 ```go
 func (h *HistoryItem) UnmarshalJSON(data []byte) error
@@ -2023,7 +2291,7 @@ func (h *HistoryItem) UnmarshalJSON(data []byte) error
 UnmarshalJSON customizes unmarshaling for HistoryItem to parse the \[seq, op\] array format.
 
 <a name="Manabar"></a>
-## type Manabar
+## type [Manabar](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L208-L211>)
 
 Manabar represents a player's voting or RC mana bar.
 
@@ -2035,7 +2303,7 @@ type Manabar struct {
 ```
 
 <a name="Manabar.UnmarshalJSON"></a>
-### func \(\*Manabar\) UnmarshalJSON
+### func \(\*Manabar\) [UnmarshalJSON](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L214>)
 
 ```go
 func (m *Manabar) UnmarshalJSON(data []byte) error
@@ -2044,7 +2312,7 @@ func (m *Manabar) UnmarshalJSON(data []byte) error
 UnmarshalJSON customizes unmarshaling for Manabar to support both string and numeric current\_mana.
 
 <a name="OperationTuple"></a>
-## type OperationTuple
+## type [OperationTuple](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L356>)
 
 OperationTuple represents an operation inside a block transaction: \[op\_name, op\_data\]
 
@@ -2052,8 +2320,35 @@ OperationTuple represents an operation inside a block transaction: \[op\_name, o
 type OperationTuple []any
 ```
 
+<a name="OperationTuple.CustomJSON"></a>
+### func \(OperationTuple\) [CustomJSON](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L453>)
+
+```go
+func (ot OperationTuple) CustomJSON() (CustomJSONOperation, bool, error)
+```
+
+CustomJSON extracts a typed custom\_json operation without interpreting its application\-specific JSON payload.
+
+<a name="OperationTuple.CustomJSONID"></a>
+### func \(OperationTuple\) [CustomJSONID](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L410>)
+
+```go
+func (ot OperationTuple) CustomJSONID() (string, bool)
+```
+
+CustomJSONID returns the id field of a custom\_json operation tuple, if this tuple represents a custom\_json operation with a string id. The second return value is false for any other operation type or if the id field is missing/non\-string.
+
+<a name="OperationTuple.Transfer"></a>
+### func \(OperationTuple\) [Transfer](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L422>)
+
+```go
+func (ot OperationTuple) Transfer() (TransferOperation, bool, error)
+```
+
+Transfer extracts a typed transfer operation. It returns \(false, nil\) for unrelated operations and distinguishes malformed matching operations with an error.
+
 <a name="OperationTuple.UnmarshalJSON"></a>
-### func \(\*OperationTuple\) UnmarshalJSON
+### func \(\*OperationTuple\) [UnmarshalJSON](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L386>)
 
 ```go
 func (ot *OperationTuple) UnmarshalJSON(data []byte) error
@@ -2062,7 +2357,7 @@ func (ot *OperationTuple) UnmarshalJSON(data []byte) error
 UnmarshalJSON customizes unmarshaling for OperationTuple to support both legacy array\-based format \[type, value\] and Block API object\-based format \{"type": "...", "value": ...\}.
 
 <a name="Price"></a>
-## type Price
+## type [Price](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L577-L580>)
 
 Price represents Hive base/quote asset ratio.
 
@@ -2074,7 +2369,7 @@ type Price struct {
 ```
 
 <a name="RCInfo"></a>
-## type RCInfo
+## type [RCInfo](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L337-L344>)
 
 RCInfo represents a player's Resource Credit information.
 
@@ -2090,7 +2385,7 @@ type RCInfo struct {
 ```
 
 <a name="Time"></a>
-## type Time
+## type [Time](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L17>)
 
 Time represents a timezone\-naive UTC timestamp returned by the Hive API \(format: "YYYY\-MM\-DDTHH:MM:SS"\).
 
@@ -2099,7 +2394,7 @@ type Time time.Time
 ```
 
 <a name="Time.MarshalJSON"></a>
-### func \(Time\) MarshalJSON
+### func \(Time\) [MarshalJSON](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L39>)
 
 ```go
 func (ht Time) MarshalJSON() ([]byte, error)
@@ -2108,7 +2403,7 @@ func (ht Time) MarshalJSON() ([]byte, error)
 MarshalJSON customizes marshaling for Time to format as the Hive datetime string.
 
 <a name="Time.String"></a>
-### func \(Time\) String
+### func \(Time\) [String](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L53>)
 
 ```go
 func (ht Time) String() string
@@ -2117,7 +2412,7 @@ func (ht Time) String() string
 String returns the string representation of types.Time.
 
 <a name="Time.Time"></a>
-### func \(Time\) Time
+### func \(Time\) [Time](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L48>)
 
 ```go
 func (ht Time) Time() time.Time
@@ -2126,7 +2421,7 @@ func (ht Time) Time() time.Time
 Time converts types.Time back to the standard time.Time.
 
 <a name="Time.UnmarshalJSON"></a>
-### func \(\*Time\) UnmarshalJSON
+### func \(\*Time\) [UnmarshalJSON](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L20>)
 
 ```go
 func (ht *Time) UnmarshalJSON(b []byte) error
@@ -2135,7 +2430,7 @@ func (ht *Time) UnmarshalJSON(b []byte) error
 UnmarshalJSON customizes unmarshaling for Time to parse the Hive datetime format.
 
 <a name="TransactionInBlock"></a>
-## type TransactionInBlock
+## type [TransactionInBlock](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L536-L543>)
 
 TransactionInBlock represents a transaction inside a block.
 
@@ -2150,8 +2445,22 @@ type TransactionInBlock struct {
 }
 ```
 
+<a name="TransferOperation"></a>
+## type [TransferOperation](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L369-L374>)
+
+TransferOperation contains the Hive\-generic fields of a transfer operation.
+
+```go
+type TransferOperation struct {
+    From   string
+    To     string
+    Amount string
+    Memo   string
+}
+```
+
 <a name="VestingDelegation"></a>
-## type VestingDelegation
+## type [VestingDelegation](<https://github.com/srbde/hive-anther/blob/main/types/types.go#L607-L613>)
 
 VestingDelegation represents a vesting delegation on the Hive blockchain.
 
@@ -2184,7 +2493,7 @@ Package wallet provides a simple in\-memory key wallet to manage private keys fo
 
 
 <a name="Wallet"></a>
-## type Wallet
+## type [Wallet](<https://github.com/srbde/hive-anther/blob/main/wallet/wallet.go#L14-L17>)
 
 Wallet is a simple in\-memory wallet for managing Hive private keys.
 
@@ -2196,7 +2505,7 @@ type Wallet struct {
 ```
 
 <a name="NewWallet"></a>
-### func NewWallet
+### func [NewWallet](<https://github.com/srbde/hive-anther/blob/main/wallet/wallet.go#L20>)
 
 ```go
 func NewWallet() *Wallet
@@ -2205,7 +2514,7 @@ func NewWallet() *Wallet
 NewWallet creates a new Wallet.
 
 <a name="Wallet.AddKey"></a>
-### func \(\*Wallet\) AddKey
+### func \(\*Wallet\) [AddKey](<https://github.com/srbde/hive-anther/blob/main/wallet/wallet.go#L27>)
 
 ```go
 func (w *Wallet) AddKey(account, role, wif string) error
@@ -2214,7 +2523,7 @@ func (w *Wallet) AddKey(account, role, wif string) error
 AddKey adds a private key for an account role.
 
 <a name="Wallet.GetKey"></a>
-### func \(\*Wallet\) GetKey
+### func \(\*Wallet\) [GetKey](<https://github.com/srbde/hive-anther/blob/main/wallet/wallet.go#L63>)
 
 ```go
 func (w *Wallet) GetKey(account, role string) (string, error)
@@ -2223,7 +2532,7 @@ func (w *Wallet) GetKey(account, role string) (string, error)
 GetKey gets WIF key if available.
 
 <a name="Wallet.HasKey"></a>
-### func \(\*Wallet\) HasKey
+### func \(\*Wallet\) [HasKey](<https://github.com/srbde/hive-anther/blob/main/wallet/wallet.go#L51>)
 
 ```go
 func (w *Wallet) HasKey(account, role string) bool
@@ -2232,7 +2541,7 @@ func (w *Wallet) HasKey(account, role string) bool
 HasKey checks if a key is loaded for the account/role.
 
 <a name="Wallet.Sign"></a>
-### func \(\*Wallet\) Sign
+### func \(\*Wallet\) [Sign](<https://github.com/srbde/hive-anther/blob/main/wallet/wallet.go#L78>)
 
 ```go
 func (w *Wallet) Sign(tx *transaction.Transaction, account, role string) error
