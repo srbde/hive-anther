@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -354,6 +355,32 @@ type BlockHeader struct {
 // OperationTuple represents an operation inside a block transaction: [op_name, op_data]
 type OperationTuple []any
 
+// Errors returned by typed operation helpers when a matching operation cannot
+// be decoded without guessing at the Hive wire representation.
+var (
+	ErrMalformedOperationTuple = errors.New("malformed operation tuple")
+	ErrMissingOperationField   = errors.New("missing operation field")
+	ErrWrongOperationFieldType = errors.New("wrong operation field type")
+	ErrMalformedAmount         = errors.New("malformed operation amount")
+	ErrMalformedAuthArray      = errors.New("malformed authorization array")
+)
+
+// TransferOperation contains the Hive-generic fields of a transfer operation.
+type TransferOperation struct {
+	From   string
+	To     string
+	Amount string
+	Memo   string
+}
+
+// CustomJSONOperation contains the Hive-generic fields of a custom_json operation.
+type CustomJSONOperation struct {
+	ID                   string
+	RequiredAuths        []string
+	RequiredPostingAuths []string
+	JSON                 string
+}
+
 // UnmarshalJSON customizes unmarshaling for OperationTuple to support both legacy array-based format [type, value]
 // and Block API object-based format {"type": "...", "value": ...}.
 func (ot *OperationTuple) UnmarshalJSON(data []byte) error {
@@ -381,19 +408,128 @@ func (ot *OperationTuple) UnmarshalJSON(data []byte) error {
 // a custom_json operation with a string id. The second return value is false for any other
 // operation type or if the id field is missing/non-string.
 func (ot OperationTuple) CustomJSONID() (string, bool) {
-	if len(ot) != 2 {
-		return "", false
-	}
-	opType, ok := ot[0].(string)
+	opType, data, ok := operationData(ot, "custom_json")
 	if !ok || opType != "custom_json" {
-		return "", false
-	}
-	data, ok := ot[1].(map[string]any)
-	if !ok {
 		return "", false
 	}
 	id, ok := data["id"].(string)
 	return id, ok
+}
+
+// Transfer extracts a typed transfer operation. It returns (false, nil) for
+// unrelated operations and distinguishes malformed matching operations with an
+// error.
+func (ot OperationTuple) Transfer() (TransferOperation, bool, error) {
+	var result TransferOperation
+	_, data, ok, err := matchingOperationData(ot, "transfer")
+	if err != nil || !ok {
+		return result, ok, err
+	}
+
+	if result.From, err = requiredString(data, "from"); err != nil {
+		return result, true, err
+	}
+	if result.To, err = requiredString(data, "to"); err != nil {
+		return result, true, err
+	}
+	if result.Amount, err = requiredString(data, "amount"); err != nil {
+		return result, true, err
+	}
+	if _, parseErr := ParseAmount(result.Amount); parseErr != nil {
+		return result, true, fmt.Errorf("%w: %v", ErrMalformedAmount, parseErr)
+	}
+	if memo, present := data["memo"]; present {
+		var memoOK bool
+		result.Memo, memoOK = memo.(string)
+		if !memoOK {
+			return result, true, fmt.Errorf("%w: %q", ErrWrongOperationFieldType, "memo")
+		}
+	}
+	return result, true, nil
+}
+
+// CustomJSON extracts a typed custom_json operation without interpreting its
+// application-specific JSON payload.
+func (ot OperationTuple) CustomJSON() (CustomJSONOperation, bool, error) {
+	var result CustomJSONOperation
+	_, data, ok, err := matchingOperationData(ot, "custom_json")
+	if err != nil || !ok {
+		return result, ok, err
+	}
+	if result.ID, err = requiredString(data, "id"); err != nil {
+		return result, true, err
+	}
+	if result.JSON, err = requiredString(data, "json"); err != nil {
+		return result, true, err
+	}
+	if result.RequiredAuths, err = stringArray(data, "required_auths"); err != nil {
+		return result, true, err
+	}
+	if result.RequiredPostingAuths, err = stringArray(data, "required_posting_auths"); err != nil {
+		return result, true, err
+	}
+	return result, true, nil
+}
+
+func operationData(ot OperationTuple, want string) (string, map[string]any, bool) {
+	opType, data, ok, _ := matchingOperationData(ot, want)
+	return opType, data, ok
+}
+
+func matchingOperationData(ot OperationTuple, want string) (string, map[string]any, bool, error) {
+	if len(ot) != 2 {
+		return "", nil, false, fmt.Errorf("%w: expected [type, value]", ErrMalformedOperationTuple)
+	}
+	opType, ok := ot[0].(string)
+	if !ok {
+		return "", nil, false, fmt.Errorf("%w: operation type", ErrWrongOperationFieldType)
+	}
+	if opType != want {
+		return opType, nil, false, nil
+	}
+	data, ok := ot[1].(map[string]any)
+	if !ok {
+		return opType, nil, true, fmt.Errorf("%w: operation value", ErrMalformedOperationTuple)
+	}
+	return opType, data, true, nil
+}
+
+func requiredString(data map[string]any, field string) (string, error) {
+	value, present := data[field]
+	if !present {
+		return "", fmt.Errorf("%w: %q", ErrMissingOperationField, field)
+	}
+	result, ok := value.(string)
+	if !ok {
+		return "", fmt.Errorf("%w: %q", ErrWrongOperationFieldType, field)
+	}
+	if result == "" {
+		return "", fmt.Errorf("%w: %q", ErrMissingOperationField, field)
+	}
+	return result, nil
+}
+
+func stringArray(data map[string]any, field string) ([]string, error) {
+	value, present := data[field]
+	if !present {
+		return nil, fmt.Errorf("%w: %q", ErrMissingOperationField, field)
+	}
+	array, ok := value.([]any)
+	if !ok {
+		if strings, ok := value.([]string); ok {
+			return append([]string(nil), strings...), nil
+		}
+		return nil, fmt.Errorf("%w: %q", ErrMalformedAuthArray, field)
+	}
+	result := make([]string, len(array))
+	for i, item := range array {
+		var itemOK bool
+		result[i], itemOK = item.(string)
+		if !itemOK {
+			return nil, fmt.Errorf("%w: %q[%d]", ErrMalformedAuthArray, field, i)
+		}
+	}
+	return result, nil
 }
 
 // TransactionInBlock represents a transaction inside a block.

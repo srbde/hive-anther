@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"math"
 	"testing"
 	"time"
@@ -165,6 +166,109 @@ func TestOperationTupleCustomJSONID(t *testing.T) {
 			t.Fatalf("expected ok=false for missing id field")
 		}
 	})
+}
+
+func TestOperationTupleTransfer(t *testing.T) {
+	tests := []struct {
+		name string
+		wire string
+		want TransferOperation
+	}{
+		{"array", `["transfer", {"from":"alice","to":"bob","amount":"1.000 HIVE","memo":"hi"}]`, TransferOperation{"alice", "bob", "1.000 HIVE", "hi"}},
+		{"object", `{"type":"transfer","value":{"from":"alice","to":"bob","amount":"2.500 HBD"}}`, TransferOperation{"alice", "bob", "2.500 HBD", ""}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var ot OperationTuple
+			if err := json.Unmarshal([]byte(tt.wire), &ot); err != nil {
+				t.Fatal(err)
+			}
+			got, matched, err := ot.Transfer()
+			if err != nil || !matched {
+				t.Fatalf("Transfer() = %#v, %v, %v", got, matched, err)
+			}
+			if got != tt.want {
+				t.Errorf("Transfer() = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
+
+	for _, field := range []string{"from", "to", "amount"} {
+		t.Run("missing "+field, func(t *testing.T) {
+			data := map[string]any{"from": "alice", "to": "bob", "amount": "1.000 HIVE"}
+			delete(data, field)
+			_, matched, err := (OperationTuple{"transfer", data}).Transfer()
+			if !matched || !errors.Is(err, ErrMissingOperationField) {
+				t.Fatalf("expected missing-field error, matched=%v err=%v", matched, err)
+			}
+		})
+	}
+
+	for name, data := range map[string]map[string]any{
+		"wrong type": {"from": "alice", "to": "bob", "amount": 1.0},
+		"bad amount": {"from": "alice", "to": "bob", "amount": "not-an-amount"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			_, matched, err := (OperationTuple{"transfer", data}).Transfer()
+			if !matched || err == nil {
+				t.Fatalf("expected malformed matching transfer, matched=%v err=%v", matched, err)
+			}
+			if name == "wrong type" && !errors.Is(err, ErrWrongOperationFieldType) {
+				t.Errorf("expected wrong-type error, got %v", err)
+			}
+			if name == "bad amount" && !errors.Is(err, ErrMalformedAmount) {
+				t.Errorf("expected malformed-amount error, got %v", err)
+			}
+		})
+	}
+
+	got, matched, err := (OperationTuple{"vote", map[string]any{}}).Transfer()
+	if matched || err != nil || got != (TransferOperation{}) {
+		t.Fatalf("unrelated operation = %#v, %v, %v", got, matched, err)
+	}
+}
+
+func TestOperationTupleCustomJSON(t *testing.T) {
+	tests := []string{
+		`["custom_json", {"id":"x/hiveidentity","required_auths":["alice"],"required_posting_auths":[],"json":"{\"ok\":true}"}]`,
+		`{"type":"custom_json","value":{"id":"x/hivebridge","required_auths":[],"required_posting_auths":["bob"],"json":"payload"}}`,
+	}
+	for _, wire := range tests {
+		var ot OperationTuple
+		if err := json.Unmarshal([]byte(wire), &ot); err != nil {
+			t.Fatal(err)
+		}
+		got, matched, err := ot.CustomJSON()
+		if err != nil || !matched {
+			t.Fatalf("CustomJSON() = %#v, %v, %v", got, matched, err)
+		}
+		if got.ID == "" || got.JSON == "" || got.RequiredAuths == nil || got.RequiredPostingAuths == nil {
+			t.Fatalf("unexpected custom_json result: %#v", got)
+		}
+	}
+
+	for _, field := range []string{"id", "json", "required_auths", "required_posting_auths"} {
+		t.Run("missing "+field, func(t *testing.T) {
+			data := map[string]any{"id": "id", "json": "{}", "required_auths": []any{}, "required_posting_auths": []any{}}
+			delete(data, field)
+			_, matched, err := (OperationTuple{"custom_json", data}).CustomJSON()
+			if !matched || err == nil {
+				t.Fatalf("expected missing-field error, matched=%v err=%v", matched, err)
+			}
+		})
+	}
+
+	_, matched, err := (OperationTuple{"custom_json", map[string]any{
+		"id": "id", "json": "{}", "required_auths": []any{"alice", 1}, "required_posting_auths": []any{},
+	}}).CustomJSON()
+	if !matched || !errors.Is(err, ErrMalformedAuthArray) {
+		t.Fatalf("expected malformed auth array, matched=%v err=%v", matched, err)
+	}
+
+	got, matched, err := (OperationTuple{"transfer", map[string]any{}}).CustomJSON()
+	if matched || err != nil || got.ID != "" || got.JSON != "" || got.RequiredAuths != nil || got.RequiredPostingAuths != nil {
+		t.Fatalf("unrelated operation = %#v, %v, %v", got, matched, err)
+	}
 }
 
 func TestAuthorityJSON(t *testing.T) {
